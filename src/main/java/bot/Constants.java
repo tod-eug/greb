@@ -5,7 +5,7 @@ public interface Constants {
      * Strings for commands replies
      */
     String START_REPLY_WELCOME = "Добро пожаловать! ";
-    String TESTS_COMMAND = "Список доступных тестов по грамматике: \n ";
+    String TESTS_COMMAND = "Список доступных тестов по грамматике: \n";
 
     /**
      * Other strings
