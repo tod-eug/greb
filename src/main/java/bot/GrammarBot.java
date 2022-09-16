@@ -1,5 +1,6 @@
 package bot;
 
+import bot.command.StartCommand;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -11,6 +12,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
 
     public GrammarBot() {
         super();
+        register(new StartCommand());
     }
     @Override
     public String getBotUsername() {
