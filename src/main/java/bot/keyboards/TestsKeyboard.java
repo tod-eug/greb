@@ -24,7 +24,7 @@ public class TestsKeyboard {
                 for (Test s : tests) {
                     InlineKeyboardButton button = new InlineKeyboardButton();
                     button.setText(s.getCode());
-                    button.setCallbackData("test" + "-" +user.getId() + "-" + toLatinTrans.transliterate(s.getCode()));
+                    button.setCallbackData("test" + "-" + user.getId() + "-" + s.getCode() + "-" + System.currentTimeMillis() / 1000);
                     rowInline.add(button);
                 }
             }
