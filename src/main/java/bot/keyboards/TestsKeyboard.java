@@ -1,6 +1,7 @@
 package bot.keyboards;
 
 import com.ibm.icu.text.Transliterator;
+import dto.Test;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
@@ -11,7 +12,7 @@ import java.util.List;
 
 public class TestsKeyboard {
 
-    public static ReplyKeyboard getTestsKeyboard(List<String> tests, User user) {
+    public static ReplyKeyboard getTestsKeyboard(List<Test> tests, User user) {
         Transliterator toLatinTrans = Transliterator.getInstance("Russian-Latin/BGN");
 
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
@@ -20,10 +21,10 @@ public class TestsKeyboard {
 
         if (tests != null) {
             if (!tests.isEmpty()) {
-                for (String s : tests) {
+                for (Test s : tests) {
                     InlineKeyboardButton button = new InlineKeyboardButton();
-                    button.setText(s);
-                    button.setCallbackData("test" + "-" +user.getId() + "-" + toLatinTrans.transliterate(s));
+                    button.setText(s.getCode());
+                    button.setCallbackData("test" + "-" +user.getId() + "-" + toLatinTrans.transliterate(s.getCode()));
                     rowInline.add(button);
                 }
             }

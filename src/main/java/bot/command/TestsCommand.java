@@ -2,6 +2,7 @@ package bot.command;
 
 import bot.Constants;
 import bot.keyboards.TestsKeyboard;
+import dto.Test;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -24,12 +25,12 @@ public class TestsCommand implements IBotCommand {
     @Override
     public void processMessage(AbsSender absSender, Message message, String[] arguments) {
         SheetsUtil sheetsUtil = new SheetsUtil();
-        List<String> tests = sheetsUtil.getTests();
+        List<Test> tests = sheetsUtil.getTests();
 
         String testsList = "";
         if (!tests.isEmpty()) {
-            for (String s : tests) {
-                testsList = testsList + "- " + s + "\n";
+            for (Test s : tests) {
+                testsList = testsList + s.getCode() + " - " + s.getName() + "\n";
             }
         }
 
