@@ -1,7 +1,7 @@
 package bot.keyboards;
 
 import bot.enums.Option;
-import bot.enums.CurrentUserTestState;
+import dto.CurrentUserTestState;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;

@@ -1,4 +1,4 @@
-package bot.enums;
+package dto;
 
 import dto.NormalTestQuestion;
 

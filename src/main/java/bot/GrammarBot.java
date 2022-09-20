@@ -3,7 +3,7 @@ package bot;
 import bot.command.StartCommand;
 import bot.command.TestsCommand;
 import bot.enums.Option;
-import bot.enums.CurrentUserTestState;
+import dto.CurrentUserTestState;
 import bot.keyboards.OptionsKeyboard;
 import dto.NormalTestQuestion;
 import mapper.NormalTestQuestionMapper;
