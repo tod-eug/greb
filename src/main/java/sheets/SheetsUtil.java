@@ -78,7 +78,6 @@ public class SheetsUtil {
         List<NormalTestQuestion> result = new ArrayList<>();
         List<List<Object>> l = readResult.getValueRanges().get(0).getValues();
         for (int i = 0; i < l.size(); i++) {
-            for (int j = 0; j < l.get(i).size(); j++) {
                 if (i == 0) //first line is header
                     continue;
                 Map<String, String> optionMap = new HashMap<>();
@@ -86,7 +85,6 @@ public class SheetsUtil {
                     optionMap.put(l.get(0).get(k).toString(), l.get(i).get(k).toString());
                 }
                 result.add(normalTestQuestionMapper.mapQuestion(l.get(i).get(0).toString(), l.get(i).get(1).toString(), optionMap));
-            }
         }
         return result;
     }
