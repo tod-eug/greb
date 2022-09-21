@@ -10,12 +10,14 @@ import mapper.NormalTestQuestionMapper;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import sheets.SheetsUtil;
 import util.PropertiesProvider;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,7 +81,8 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         if (testStateMap.get(userId) == null && testCode != null) {
             SheetsUtil sheetsUtil = new SheetsUtil();
             List<NormalTestQuestion> test = sheetsUtil.getNormalTest(testCode);
-            testStateMap.put(userId, new CurrentUserTestState(testCode, userId, test, update.getCallbackQuery().getData(), 0));
+            List<Integer> optionMessages = new ArrayList<>();
+            testStateMap.put(userId, new CurrentUserTestState(testCode, userId, test, update.getCallbackQuery().getData(), 0, optionMessages));
             processAttempt(update);
         } else if (testStateMap.get(userId) != null && parsedCallbackForOptions[3] != null) {
             processAttempt(update);
@@ -105,16 +108,29 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                     .getAnswer()));
         }
 
+        List<Integer> optionMessage = currentUserTestState.getOptionMessages();
+        if (currentUserTestState.getCurrentQuestion() != 0) {
+            optionMessage.add(update.getCallbackQuery().getMessage().getMessageId());
+            currentUserTestState.setOptionMessages(optionMessage);
+        }
+
         //send next question
         int currentQuestion = currentUserTestState.getCurrentQuestion();
-        if (currentUserTestState.getCurrentQuestion() > test.size()) {
-            sendMsg(chatID, "Finish!");
-        } else {
+        if (currentUserTestState.getCurrentQuestion() < test.size()) {
             SendMessage sm = new SendMessage();
             sm.setChatId(chatID);
             sm.setText(test.get(currentUserTestState.getCurrentQuestion()).getQuestion());
             sm.setReplyMarkup(OptionsKeyboard.getOptionKeyboard(currentUserTestState));
             send(sm);
+        } else {
+            testStateMap.remove(update.getCallbackQuery().getFrom().getId());
+            SendMessage sm = new SendMessage();
+            sm.setChatId(chatID);
+            sm.setText("Completed!");
+            send(sm);
+            for (Integer i: optionMessage) {
+                deleteMessage(update.getCallbackQuery().getMessage().getChatId(), i);
+            }
         }
         currentUserTestState.setCurrentQuestion(++currentQuestion);
     }
@@ -133,7 +149,11 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
     private void sendAnswerCallbackQuery(String id, Boolean success) {
         AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery();
         answerCallbackQuery.setCallbackQueryId(id);
-        answerCallbackQuery.setShowAlert(success);
+        answerCallbackQuery.setShowAlert(false);
+        if (success)
+            answerCallbackQuery.setText("✅");
+        else
+            answerCallbackQuery.setText("❌");
         try {
             execute(answerCallbackQuery);
         } catch (TelegramApiException e) {
@@ -144,6 +164,17 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
     private void send(SendMessage sm) {
         try {
             execute(sm);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void deleteMessage(long chatId, int messageId) {
+        DeleteMessage deleteMessage = new DeleteMessage();
+        deleteMessage.setChatId(Long.toString(chatId));
+        deleteMessage.setMessageId(messageId);
+        try {
+            execute(deleteMessage);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
