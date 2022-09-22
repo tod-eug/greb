@@ -1,27 +1,29 @@
 package bot.keyboards;
 
-import dto.Test;
-import org.telegram.telegrambots.meta.api.objects.User;
+import bot.enums.Option;
+import dto.CurrentUserTestState;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
-public class TestsKeyboard {
+public class OptionsKeyboard {
 
-    public static ReplyKeyboard getTestsKeyboard(List<Test> tests, User user) {
+    public static ReplyKeyboard getOptionKeyboard(CurrentUserTestState currentUserTestState) {
+        Map<Option, String> options = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion()).getOptions();
+
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<InlineKeyboardButton> rowInline = new ArrayList<>();
 
-        if (tests != null) {
-            if (!tests.isEmpty()) {
-                for (Test s : tests) {
+        if (options != null) {
+            if (!options.isEmpty()) {
+                Set<Option> optionsSet = options.keySet();
+                for (Option o : optionsSet) {
                     InlineKeyboardButton button = new InlineKeyboardButton();
-                    button.setText(s.getCode());
-                    button.setCallbackData("test" + "-" + user.getId() + "-" + s.getCode() + "-" + System.currentTimeMillis() / 1000);
+                    button.setText(options.get(o));
+                    button.setCallbackData("answer" + ":" + currentUserTestState.getAttemptCode() + ":" + currentUserTestState.getCurrentQuestion() + ":" + o.name());
                     rowInline.add(button);
                 }
             }

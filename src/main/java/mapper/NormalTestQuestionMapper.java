@@ -21,7 +21,7 @@ public class NormalTestQuestionMapper {
         return new NormalTestQuestion(question, optionsOption, answerOption);
     }
 
-    private Option mapOption(String text) {
+    public Option mapOption(String text) {
         switch (text.toLowerCase()) {
             case "a":
                 return Option.A;
