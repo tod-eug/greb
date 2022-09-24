@@ -1,6 +1,6 @@
 package bot.command;
 
-import bot.Constants;
+import bot.ReplyConstants;
 import bot.keyboards.TestsKeyboard;
 import dto.Test;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
@@ -37,7 +37,7 @@ public class TestsCommand implements IBotCommand {
         MessageProcessor mp = new MessageProcessor();
         SendMessage sm = new SendMessage();
         sm.setChatId(message.getChatId());
-        sm.setText(Constants.TESTS_COMMAND + testsList);
+        sm.setText(ReplyConstants.TESTS_COMMAND + testsList);
         sm.setReplyMarkup(TestsKeyboard.getTestsKeyboard(tests, message.getFrom()));
         mp.sendMsg(absSender, sm);
     }

@@ -1,6 +1,6 @@
 package bot;
 
-public interface Constants {
+public interface ReplyConstants {
     /**
      * Strings for commands replies
      */

@@ -1,6 +1,6 @@
 package bot.command;
 
-import bot.Constants;
+import bot.ReplyConstants;
 import db.UsersHelper;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -23,7 +23,7 @@ public class StartCommand implements IBotCommand {
         MessageProcessor mp = new MessageProcessor();
         SendMessage sm = new SendMessage();
         sm.setChatId(message.getChatId());
-        sm.setText(Constants.START_REPLY_WELCOME + Constants.USE_TESTS_COMMAND);
+        sm.setText(ReplyConstants.START_REPLY_WELCOME + ReplyConstants.USE_TESTS_COMMAND);
         mp.sendMsg(absSender, sm);
 
         UsersHelper uh = new UsersHelper();

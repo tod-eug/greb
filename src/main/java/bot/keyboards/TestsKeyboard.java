@@ -1,5 +1,6 @@
 package bot.keyboards;
 
+import bot.SysConstants;
 import dto.Test;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -21,7 +22,10 @@ public class TestsKeyboard {
                 for (Test s : tests) {
                     InlineKeyboardButton button = new InlineKeyboardButton();
                     button.setText(s.getCode());
-                    button.setCallbackData("test" + "-" + user.getId() + "-" + s.getCode() + "-" + System.currentTimeMillis() / 1000);
+                    button.setCallbackData(SysConstants.TESTS_CALLBACK_TYPE + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
+                            user.getId() + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
+                            s.getCode() + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
+                            System.currentTimeMillis() / 1000);
                     rowInline.add(button);
                 }
             }
