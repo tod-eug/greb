@@ -17,13 +17,13 @@ import java.util.*;
 
 public class SheetsUtil {
 
-    private static String SPREADSHEET_ID = "1xXJgahgs3noBCc2SiMelmdqgjLll6MOY1AzhpaqloUE";
+    private static final String SPREADSHEET_ID = "1xXJgahgs3noBCc2SiMelmdqgjLll6MOY1AzhpaqloUE";
 
-    private static String TESTS_LIST_NAME = "tests";
-    private static int LINE_USED_FOR_ONE_TEST = 3;
-    private static int SPACE_BETWEEN_TESTS_LINES = 3;
-    private static String LATEST_COLUMN_TO_GET = "Z";
-    private static int HOW_MANY_ROWS_TO_GET = 100;
+    private static final String TESTS_LIST_NAME = "tests";
+    private static final int LINE_USED_FOR_ONE_TEST = 3;
+    private static final int SPACE_BETWEEN_TESTS_LINES = 3;
+    private static final String LATEST_COLUMN_TO_GET = "Z";
+    private static final int HOW_MANY_ROWS_TO_GET = 100;
 
 
     private Sheets sheet = GoogleAuthorizeProvider.getSheet();
