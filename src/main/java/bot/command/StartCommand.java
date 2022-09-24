@@ -1,6 +1,7 @@
 package bot.command;
 
 import bot.Constants;
+import db.UsersHelper;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
@@ -24,5 +25,8 @@ public class StartCommand implements IBotCommand {
         sm.setChatId(message.getChatId());
         sm.setText(Constants.START_REPLY_WELCOME + Constants.USE_TESTS_COMMAND);
         mp.sendMsg(absSender, sm);
+
+        UsersHelper uh = new UsersHelper();
+        String userId = uh.findUserByTgId(message.getFrom().getId().toString(), message.getFrom());
     }
 }

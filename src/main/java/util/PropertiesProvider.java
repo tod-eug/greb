@@ -14,6 +14,7 @@ public class PropertiesProvider {
 
     public static void setup() {
         loadConfigs("src/main/resources/bot.properties");
+        loadConfigs("src/main/resources/db.properties");
     }
 
     private static void loadConfigs(String configFile) {
