@@ -3,6 +3,7 @@ package bot;
 import bot.command.StartCommand;
 import bot.command.TestsCommand;
 import bot.enums.Option;
+import bot.enums.TestType;
 import db.ResultsHelper;
 import dto.CurrentUserTestState;
 import bot.keyboards.OptionsKeyboard;
@@ -87,14 +88,14 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         String[] parsedCallbackForTests = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_TESTS_CALLBACK);
         String[] parsedCallbackForQuestion = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK);
         String callbackType = "";
-        if (parsedCallbackForTests[0].equals(SysConstants.TESTS_CALLBACK_TYPE))
+        if (parsedCallbackForTests[SysConstants.NUMBER_OF_CALLBACK_TYPE_IN_CALLBACK].equals(SysConstants.TESTS_CALLBACK_TYPE))
             callbackType = SysConstants.TESTS_CALLBACK_TYPE;
-        else if (parsedCallbackForQuestion[0].equals(SysConstants.QUESTIONS_CALLBACK_TYPE))
+        else if (parsedCallbackForQuestion[SysConstants.NUMBER_OF_CALLBACK_TYPE_IN_CALLBACK].equals(SysConstants.QUESTIONS_CALLBACK_TYPE))
             callbackType = SysConstants.QUESTIONS_CALLBACK_TYPE;
 
         //process logic
         if (testStateMap.get(userId) == null && callbackType.equals(SysConstants.TESTS_CALLBACK_TYPE)) {
-            String testCode = parsedCallbackForTests[2];
+            String testCode = parsedCallbackForTests[SysConstants.NUMBER_OF_TEST_TYPE_IN_CALLBACK];
             initiateNewTestAttempt(update, testCode, userId, callbackType);
         } else if (testStateMap.get(userId) != null && callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
             processNextQuestion(update, callbackType);
@@ -117,7 +118,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
 
         //process answer for previous question and delete previous question
         if (callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
-            Option currentAnswer = testQuestionMapper.mapOption(parsedCallbackForOptions[3]);
+            Option currentAnswer = testQuestionMapper.mapOption(parsedCallbackForOptions[SysConstants.NUMBER_OF_RESULTS_IN_CALLBACK]);
             Option expectedAnswer = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1).getAnswer();
             boolean isRight = currentAnswer.equals(expectedAnswer);
 
