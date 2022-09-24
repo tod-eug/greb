@@ -1,24 +1,41 @@
 package mapper;
 
 import bot.enums.Option;
-import dto.NormalTestQuestion;
+import bot.enums.TestType;
+import dto.TestQuestion;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class NormalTestQuestionMapper {
+public class TestQuestionMapper {
 
-    public NormalTestQuestion mapQuestion(String question, String answer, Map<String, String> options) {
+    public TestQuestion mapQuestion(String testType, String article, String question, String answer, String answerWriting, Map<String, String> options) {
         Option answerOption = mapOption(answer);
         Map<Option, String> optionsOption = new HashMap<>();
+        TestType type = mapTestType(testType);
 
         Set<String> optionKeys = options.keySet();
         for (String key : optionKeys) {
             Option keyOption = mapOption(key);
             optionsOption.put(keyOption, options.get(key));
         }
-        return new NormalTestQuestion(question, optionsOption, answerOption);
+        return new TestQuestion(type, article, question, optionsOption, answerOption, answerWriting);
+    }
+
+    public TestType mapTestType(String text) {
+        switch (text.toLowerCase()) {
+            case "normalwriting":
+                return TestType.normalWriting;
+            case "article":
+                return TestType.article;
+            case "articlewriting":
+                return TestType.articleWriting;
+            case "match":
+                return TestType.match;
+            default:
+                return TestType.normal;
+        }
     }
 
     public Option mapOption(String text) {

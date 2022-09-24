@@ -4,16 +4,16 @@ import bot.enums.Option;
 
 import java.util.Map;
 
-public class NormalTestResult {
+public class TestResult {
     private final String question;
     private final Map<Option, String> options;
     private final Option answer;
     private final boolean isRight;
 
-    public NormalTestResult(String question,
-                            Map<Option, String> options,
-                            Option answer,
-                            boolean isRight) {
+    public TestResult(String question,
+                      Map<Option, String> options,
+                      Option answer,
+                      boolean isRight) {
         this.question = question;
         this.options = options;
         this.answer = answer;

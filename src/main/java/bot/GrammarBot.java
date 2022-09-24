@@ -6,9 +6,9 @@ import bot.enums.Option;
 import db.ResultsHelper;
 import dto.CurrentUserTestState;
 import bot.keyboards.OptionsKeyboard;
-import dto.NormalTestQuestion;
-import dto.NormalTestResult;
-import mapper.NormalTestQuestionMapper;
+import dto.TestQuestion;
+import dto.TestResult;
+import mapper.TestQuestionMapper;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -83,7 +83,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         Long userId = update.getCallbackQuery().getFrom().getId();
         if (testStateMap.get(userId) == null && testCode != null) {
             SheetsUtil sheetsUtil = new SheetsUtil();
-            List<NormalTestQuestion> test = sheetsUtil.getNormalTest(testCode);
+            List<TestQuestion> test = sheetsUtil.getTest(testCode);
             List<Integer> optionMessages = new ArrayList<>();
             int testsMessageId = update.getCallbackQuery().getMessage().getMessageId();
             CurrentUserTestState currentUserTestState = new CurrentUserTestState(testCode, userId, test, update.getCallbackQuery().getData(), 0, testsMessageId, optionMessages);
@@ -105,13 +105,13 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
     private void processAttempt(Update update) {
         Long chatID = update.getCallbackQuery().getMessage().getChatId();
         CurrentUserTestState currentUserTestState = testStateMap.get(update.getCallbackQuery().getFrom().getId());
-        List<NormalTestQuestion> test = currentUserTestState.getTest();
+        List<TestQuestion> test = currentUserTestState.getTest();
         //process answer
         ResultsHelper rh = new ResultsHelper();
         String[] parsedCallbackForOptions = update.getCallbackQuery().getData().split(":");
-        NormalTestQuestionMapper normalTestQuestionMapper = new NormalTestQuestionMapper();
+        TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
         if (parsedCallbackForOptions.length > 2) {
-            Option currentAnswer = normalTestQuestionMapper.mapOption(parsedCallbackForOptions[3]);
+            Option currentAnswer = testQuestionMapper.mapOption(parsedCallbackForOptions[3]);
             boolean isRight = currentAnswer.equals(currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1).getAnswer());
             sendAnswerCallbackQuery(update.getCallbackQuery().getId(), isRight);
             rh.createResult(currentUserTestState, currentAnswer.toString(), isRight);
@@ -133,10 +133,10 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             sm.setReplyMarkup(OptionsKeyboard.getOptionKeyboard(currentUserTestState));
             send(sm);
         } else {
-            List<NormalTestResult> results = rh.getResultsByAttemptCode(currentUserTestState);
+            List<TestResult> results = rh.getResultsByAttemptCode(currentUserTestState);
             int allQuestionsAmount = results.size();
             int rightAnswers = 0;
-            for (NormalTestResult nr : results) {
+            for (TestResult nr : results) {
                 if (nr.isRight())
                     rightAnswers++;
             }

@@ -1,13 +1,11 @@
 package dto;
 
-import dto.NormalTestQuestion;
-
 import java.util.List;
 
 public class CurrentUserTestState {
     private final String testCode;
     private final Long userId;
-    private final List<NormalTestQuestion> test;
+    private final List<TestQuestion> test;
     private final String attemptCode;
     private int currentQuestion;
     private final int testsMessageId;
@@ -15,7 +13,7 @@ public class CurrentUserTestState {
 
     public CurrentUserTestState(String testCode,
                                 Long userId,
-                                List<NormalTestQuestion> test,
+                                List<TestQuestion> test,
                                 String attemptCode,
                                 int currentQuestion,
                                 int testsMessageId,
@@ -41,7 +39,7 @@ public class CurrentUserTestState {
         return currentQuestion;
     }
 
-    public List<NormalTestQuestion> getTest() {
+    public List<TestQuestion> getTest() {
         return test;
     }
 

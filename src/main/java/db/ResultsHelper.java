@@ -2,9 +2,9 @@ package db;
 
 import bot.enums.Option;
 import dto.CurrentUserTestState;
-import dto.NormalTestQuestion;
-import dto.NormalTestResult;
-import mapper.NormalTestQuestionMapper;
+import dto.TestQuestion;
+import dto.TestResult;
+import mapper.TestQuestionMapper;
 import org.telegram.telegrambots.meta.api.objects.User;
 
 import java.sql.ResultSet;
@@ -53,11 +53,11 @@ public class ResultsHelper {
     }
 
     public void createResult(CurrentUserTestState currentUserTestState, String currentAnswer, boolean isRight) {
-        NormalTestQuestion normalTestQuestion = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1);
+        TestQuestion testQuestion = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1);
 
         String attemptId = findAttemptIdByAttemptCode(currentUserTestState);
         UUID id = UUID.randomUUID();
-        String question = normalTestQuestion.getQuestion();
+        String question = testQuestion.getQuestion();
         String options = getOptionsAsString(currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1).getOptions());
         SimpleDateFormat formatter = new SimpleDateFormat(DatabaseHelper.pattern);
         String createdDate = formatter.format(new Date());
@@ -75,13 +75,13 @@ public class ResultsHelper {
         }
     }
 
-    public List<NormalTestResult> getResultsByAttemptCode(CurrentUserTestState currentUserTestState) {
+    public List<TestResult> getResultsByAttemptCode(CurrentUserTestState currentUserTestState) {
         String attemptId = findAttemptIdByAttemptCode(currentUserTestState);
         String selectQuery = String.format("select question, options, answer, is_right from public.results where attempt_id  = '%s' order by create_date;", attemptId);
 
         DatabaseHelper dbHelper = new DatabaseHelper();
-        NormalTestQuestionMapper normalTestQuestionMapper = new NormalTestQuestionMapper();
-        List<NormalTestResult> result = new ArrayList<>();
+        TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
+        List<TestResult> result = new ArrayList<>();
         try {
             ResultSet st = dbHelper.getPreparedStatement(selectQuery).executeQuery();
 
@@ -90,9 +90,9 @@ public class ResultsHelper {
                 String[] parsedGluing = st.getString(2).split("#");
                 for (String s : parsedGluing) {
                     String[] parsedOptions = s.split("-");
-                    optionMap.put(normalTestQuestionMapper.mapOption(parsedOptions[0]), parsedOptions[1]);
+                    optionMap.put(testQuestionMapper.mapOption(parsedOptions[0]), parsedOptions[1]);
                 }
-                result.add(new NormalTestResult(st.getString(1), optionMap, normalTestQuestionMapper.mapOption(st.getString(3)), st.getObject(4, Boolean.class)));
+                result.add(new TestResult(st.getString(1), optionMap, testQuestionMapper.mapOption(st.getString(3)), st.getObject(4, Boolean.class)));
             }
         } catch (SQLException e) {
             e.printStackTrace();
