@@ -9,6 +9,9 @@ public interface SysConstants {
     Integer NUMBER_OF_TEST_TYPE_IN_CALLBACK = 2;
     Integer NUMBER_OF_RESULTS_IN_CALLBACK = 3;
 
+    String DELIMITER_FOR_WRITTEN_ANSWERS = "#";
+    String DELIMITER_FOR_ALTERNATIVE_OPTIONS = "-";
+
     String SUCCESS_EMOJI = "✅";
     String WRONG_EMOJI = "❌";
 

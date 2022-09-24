@@ -58,7 +58,8 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         }
 
         if (update.hasMessage() && update.getMessage().hasText()) {
-            processEmptyMessage(update);
+            //ToDo
+            processNextQuestion(update, SysConstants.QUESTIONS_CALLBACK_TYPE);
         }
     }
 
@@ -105,26 +106,78 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
     }
 
     private void processNextQuestion(Update update, String callbackType) {
-        CurrentUserTestState currentUserTestState = testStateMap.get(update.getCallbackQuery().getFrom().getId());
+        CurrentUserTestState currentUserTestState = null;
+        Long chatID = null;
+        Long userId = null;
+        Integer currentMessageId = null;
+        if (update.hasMessage()) {
+            currentUserTestState = testStateMap.get(update.getMessage().getFrom().getId());
+            chatID = update.getMessage().getChatId();
+            userId = update.getMessage().getFrom().getId();
+            currentMessageId = update.getMessage().getMessageId();
+        }
+
+        else {
+            currentUserTestState = testStateMap.get(update.getCallbackQuery().getFrom().getId());
+            chatID = update.getCallbackQuery().getMessage().getChatId();
+            userId = update.getCallbackQuery().getFrom().getId();
+            currentMessageId = update.getCallbackQuery().getMessage().getMessageId();
+        }
+
+        TestType testType = currentUserTestState.getTest().get(0).getTestType();
 
         ResultsHelper rh = new ResultsHelper();
         TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
 
-        String[] parsedCallbackForOptions = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK);
-        Long chatID = update.getCallbackQuery().getMessage().getChatId();
-        Integer currentMessageId = update.getCallbackQuery().getMessage().getMessageId();
+
+
+
         List<TestQuestion> test = currentUserTestState.getTest();
-        String callbackQueryID = update.getCallbackQuery().getId();
 
         //process answer for previous question and delete previous question
+        boolean isRight = false;
         if (callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
-            Option currentAnswer = testQuestionMapper.mapOption(parsedCallbackForOptions[SysConstants.NUMBER_OF_RESULTS_IN_CALLBACK]);
-            Option expectedAnswer = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1).getAnswer();
-            boolean isRight = currentAnswer.equals(expectedAnswer);
+            if (testType == TestType.normal || testType == TestType.article) {
+                String[] parsedCallbackForOptions = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK);
+                Option currentAnswer = testQuestionMapper.mapOption(parsedCallbackForOptions[SysConstants.NUMBER_OF_RESULTS_IN_CALLBACK]);
+                Option expectedAnswer = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1).getAnswer();
+                isRight = currentAnswer.equals(expectedAnswer);
+            } else if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
+                String userMessage = "";
+                if (update.hasMessage()) {
+                    userMessage = update.getMessage().getText().toLowerCase().strip();
+                } else {
+                    sendMsg(chatID, ReplyConstants.SEND_ANSWER_AS_MESSAGE);
+                }
+                String[] options = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1)
+                        .getAnswerWriting().split(SysConstants.DELIMITER_FOR_ALTERNATIVE_OPTIONS);
+                if (options.length > 1) {
+                    String[] userMessageSplitted = userMessage.split(SysConstants.DELIMITER_FOR_ALTERNATIVE_OPTIONS);
+                    for (int i = 0; i < options.length; i++) {
+                        String[] optionSplitted = options[i].split(SysConstants.DELIMITER_FOR_WRITTEN_ANSWERS);
+                        for (int j = 0; j < optionSplitted.length; j++) {
+                            if (userMessageSplitted[j] != null && userMessageSplitted[j] != null) {
+                                if (optionSplitted[j].toLowerCase().strip().equals(userMessageSplitted[j].toLowerCase().strip()))
+                                    isRight = true;
+                            }
+                        }
+                    }
 
-            sendAnswerCallbackQuery(callbackQueryID, isRight);
-            deleteMessage(chatID, currentMessageId);
-            rh.createResult(currentUserTestState, currentAnswer.toString(), isRight);
+                } else {
+                    String[] optionsSplitted = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1)
+                            .getAnswerWriting().split(SysConstants.DELIMITER_FOR_WRITTEN_ANSWERS);
+                    isRight = false;
+                    for (String s : optionsSplitted) {
+                        if (s.toLowerCase().strip().equals(userMessage.toLowerCase().strip()))
+                            isRight = true;
+                    }
+                }
+
+            }
+
+//            sendAnswerCallbackQuery(callbackQueryID, isRight);
+//            deleteMessage(chatID, currentMessageId);
+//            rh.createResult(currentUserTestState, currentAnswer.toString(), isRight);
         }
 
         //add message ID of question to List to do something with it later. Since now bot deleting the question its useless
@@ -136,6 +189,16 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
 
         //send next question logic
         int currentQuestion = currentUserTestState.getCurrentQuestion();
+        if (testType == TestType.article || testType == TestType.articleWriting) { //if article -> send article before questions
+            if (currentQuestion == 0) {
+                String text = currentUserTestState.getTest().get(0).getArticle();
+                SendMessage sm = new SendMessage();
+                sm.setChatId(chatID);
+                sm.setText(text);
+                send(sm);
+            }
+        }
+
         if (currentQuestion < test.size()) { //if its not last question send next one
             SendMessage sm = new SendMessage();
             sm.setChatId(chatID);
@@ -151,10 +214,10 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                     rightAnswers++;
             }
             String text = "Completed! Test code: "+ currentUserTestState.getTestCode() +"\nAll questions: " + allQuestionsAmount + ". Right answers: " + rightAnswers + ".";
-            editMessage(update.getCallbackQuery().getMessage().getChatId(), currentUserTestState.getTestsMessageId(), text);
+            editMessage(chatID, currentUserTestState.getTestsMessageId(), text);
 
             //reset user test state
-            testStateMap.remove(update.getCallbackQuery().getFrom().getId());
+            testStateMap.remove(userId);
         }
         currentUserTestState.setCurrentQuestion(++currentQuestion);
     }
