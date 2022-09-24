@@ -10,6 +10,7 @@ public class CurrentUserTestState {
     private final List<NormalTestQuestion> test;
     private final String attemptCode;
     private int currentQuestion;
+    private final int testsMessageId;
     private List<Integer> optionMessages;
 
     public CurrentUserTestState(String testCode,
@@ -17,12 +18,14 @@ public class CurrentUserTestState {
                                 List<NormalTestQuestion> test,
                                 String attemptCode,
                                 int currentQuestion,
+                                int testsMessageId,
                                 List<Integer> optionMessages) {
         this.testCode = testCode;
         this.userId = userId;
         this.test = test;
         this.attemptCode = attemptCode;
         this.currentQuestion = currentQuestion;
+        this.testsMessageId = testsMessageId;
         this.optionMessages = optionMessages;
     }
 
@@ -56,5 +59,9 @@ public class CurrentUserTestState {
 
     public void setOptionMessages(List<Integer> optionMessages) {
         this.optionMessages = optionMessages;
+    }
+
+    public int getTestsMessageId() {
+        return testsMessageId;
     }
 }

@@ -13,6 +13,7 @@ import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingC
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
@@ -84,7 +85,8 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             SheetsUtil sheetsUtil = new SheetsUtil();
             List<NormalTestQuestion> test = sheetsUtil.getNormalTest(testCode);
             List<Integer> optionMessages = new ArrayList<>();
-            CurrentUserTestState currentUserTestState = new CurrentUserTestState(testCode, userId, test, update.getCallbackQuery().getData(), 0, optionMessages);
+            int testsMessageId = update.getCallbackQuery().getMessage().getMessageId();
+            CurrentUserTestState currentUserTestState = new CurrentUserTestState(testCode, userId, test, update.getCallbackQuery().getData(), 0, testsMessageId, optionMessages);
             testStateMap.put(userId, currentUserTestState);
             ResultsHelper rh = new ResultsHelper();
             rh.createAttempt(currentUserTestState, update.getCallbackQuery().getFrom());
@@ -113,6 +115,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             boolean isRight = currentAnswer.equals(currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1).getAnswer());
             sendAnswerCallbackQuery(update.getCallbackQuery().getId(), isRight);
             rh.createResult(currentUserTestState, currentAnswer.toString(), isRight);
+            deleteMessage(update.getCallbackQuery().getMessage().getChatId(), update.getCallbackQuery().getMessage().getMessageId());
         }
 
         List<Integer> optionMessage = currentUserTestState.getOptionMessages();
@@ -138,13 +141,8 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                     rightAnswers++;
             }
             testStateMap.remove(update.getCallbackQuery().getFrom().getId());
-            SendMessage sm = new SendMessage();
-            sm.setChatId(chatID);
-            sm.setText("Completed! \nAll questions: " + allQuestionsAmount + ". Right answers: " + rightAnswers + ".");
-            send(sm);
-            for (Integer i: optionMessage) {
-                deleteMessage(update.getCallbackQuery().getMessage().getChatId(), i);
-            }
+            String text = "Completed! Test code: "+ currentUserTestState.getTestCode() +"\nAll questions: " + allQuestionsAmount + ". Right answers: " + rightAnswers + ".";
+            editMessage(update.getCallbackQuery().getMessage().getChatId(), currentUserTestState.getTestsMessageId(), text);
         }
         currentUserTestState.setCurrentQuestion(++currentQuestion);
     }
@@ -189,6 +187,18 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         deleteMessage.setMessageId(messageId);
         try {
             execute(deleteMessage);
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void editMessage(long chatId, int messageId, String text) {
+        EditMessageText editMessageText = new EditMessageText();
+        editMessageText.setChatId(chatId);
+        editMessageText.setMessageId(messageId);
+        editMessageText.setText(text);
+        try {
+            execute(editMessageText);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
