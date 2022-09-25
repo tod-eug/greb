@@ -110,6 +110,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         Long chatID = null;
         Long userId = null;
         Integer currentMessageId = null;
+        String callbackQueryID = "";
         if (update.hasMessage()) {
             currentUserTestState = testStateMap.get(update.getMessage().getFrom().getId());
             chatID = update.getMessage().getChatId();
@@ -117,31 +118,30 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             currentMessageId = update.getMessage().getMessageId();
         }
 
-        else {
+        else if (update.hasCallbackQuery()) {
             currentUserTestState = testStateMap.get(update.getCallbackQuery().getFrom().getId());
             chatID = update.getCallbackQuery().getMessage().getChatId();
             userId = update.getCallbackQuery().getFrom().getId();
             currentMessageId = update.getCallbackQuery().getMessage().getMessageId();
+            callbackQueryID = update.getCallbackQuery().getId();
         }
 
         TestType testType = currentUserTestState.getTest().get(0).getTestType();
+        List<TestQuestion> test = currentUserTestState.getTest();
 
         ResultsHelper rh = new ResultsHelper();
         TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
 
-
-
-
-        List<TestQuestion> test = currentUserTestState.getTest();
-
-        //process answer for previous question and delete previous question
+        //process answer for previous question
         boolean isRight = false;
         if (callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
+            //if answer is not written then simple equals
             if (testType == TestType.normal || testType == TestType.article) {
                 String[] parsedCallbackForOptions = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK);
                 Option currentAnswer = testQuestionMapper.mapOption(parsedCallbackForOptions[SysConstants.NUMBER_OF_RESULTS_IN_CALLBACK]);
                 Option expectedAnswer = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1).getAnswer();
                 isRight = currentAnswer.equals(expectedAnswer);
+            //if answer is written then complex logic
             } else if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
                 String userMessage = "";
                 if (update.hasMessage()) {
@@ -151,18 +151,26 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 }
                 String[] options = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1)
                         .getAnswerWriting().split(SysConstants.DELIMITER_FOR_ALTERNATIVE_OPTIONS);
-                if (options.length > 1) {
-                    String[] userMessageSplitted = userMessage.split(SysConstants.DELIMITER_FOR_ALTERNATIVE_OPTIONS);
+                //if there are more than one question in this question
+                if (options.length > 1) { //1.test # test  2.test # test
+                    String[] userMessageSplitted = userMessage.split(SysConstants.DELIMITER_FOR_ALTERNATIVE_OPTIONS); // 1.test   2.test
+                    Map<Integer, Boolean> ifAllIsRight = new HashMap<>();
                     for (int i = 0; i < options.length; i++) {
-                        String[] optionSplitted = options[i].split(SysConstants.DELIMITER_FOR_WRITTEN_ANSWERS);
+                        ifAllIsRight.put(i, false);
+                        String[] optionSplitted = options[i].split(SysConstants.DELIMITER_FOR_WRITTEN_ANSWERS); // 1.test  2.test
                         for (int j = 0; j < optionSplitted.length; j++) {
-                            if (userMessageSplitted[j] != null && userMessageSplitted[j] != null) {
-                                if (optionSplitted[j].toLowerCase().strip().equals(userMessageSplitted[j].toLowerCase().strip()))
-                                    isRight = true;
+                            if (optionSplitted[j] != null && userMessageSplitted.length> i) {
+                                if (optionSplitted[j].toLowerCase().strip().equals(userMessageSplitted[i].toLowerCase().strip()) && ifAllIsRight.get(i) == false)
+                                    ifAllIsRight.put(i, true);
                             }
                         }
                     }
-
+                    isRight = true;
+                    for (int k : ifAllIsRight.keySet()) {
+                        if (!ifAllIsRight.get(k))
+                            isRight = false;
+                    }
+                //if in question only one question
                 } else {
                     String[] optionsSplitted = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1)
                             .getAnswerWriting().split(SysConstants.DELIMITER_FOR_WRITTEN_ANSWERS);
@@ -175,8 +183,11 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
 
             }
 
-//            sendAnswerCallbackQuery(callbackQueryID, isRight);
-//            deleteMessage(chatID, currentMessageId);
+            //delete previous question
+            if (update.hasCallbackQuery())
+                sendAnswerCallbackQuery(callbackQueryID, isRight);
+            if (testType == TestType.normal || testType == TestType.article)
+                deleteMessage(chatID, currentMessageId);
 //            rh.createResult(currentUserTestState, currentAnswer.toString(), isRight);
         }
 
