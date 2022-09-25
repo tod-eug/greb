@@ -109,11 +109,13 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         Long userId = null;
         Integer currentMessageId = null;
         String callbackQueryID = "";
+        String currentAnswer = "";
         if (update.hasMessage()) {
             currentUserTestState = testStateMap.get(update.getMessage().getFrom().getId());
             chatID = update.getMessage().getChatId();
             userId = update.getMessage().getFrom().getId();
             currentMessageId = update.getMessage().getMessageId();
+            currentAnswer = update.getMessage().getText();
         }
 
         else if (update.hasCallbackQuery()) {
@@ -122,6 +124,10 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             userId = update.getCallbackQuery().getFrom().getId();
             currentMessageId = update.getCallbackQuery().getMessage().getMessageId();
             callbackQueryID = update.getCallbackQuery().getId();
+            if (callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
+                String[] parsedCallbackForOptions = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK);
+                currentAnswer = parsedCallbackForOptions[SysConstants.NUMBER_OF_RESULTS_IN_CALLBACK];
+            }
         }
 
         TestType testType = currentUserTestState.getTest().get(0).getTestType();
@@ -157,7 +163,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 List<Integer> newMessagesToDelete = new ArrayList<>();
                 currentUserTestState.setMessagesToDelete(newMessagesToDelete);
             }
-//            rh.createResult(currentUserTestState, currentAnswer.toString(), isRight);
+            rh.createResult(currentUserTestState, currentAnswer, isRight);
         }
 
         //send next question logic

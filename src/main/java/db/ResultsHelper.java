@@ -1,6 +1,7 @@
 package db;
 
 import bot.enums.Option;
+import bot.enums.TestType;
 import dto.CurrentUserTestState;
 import dto.TestQuestion;
 import dto.TestResult;
@@ -58,12 +59,17 @@ public class ResultsHelper {
         String attemptId = findAttemptIdByAttemptCode(currentUserTestState);
         UUID id = UUID.randomUUID();
         String question = testQuestion.getQuestion();
-        String options = getOptionsAsString(currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1).getOptions());
+        TestType type = testQuestion.getTestType();
+        String article = testQuestion.getArticle();
         SimpleDateFormat formatter = new SimpleDateFormat(DatabaseHelper.pattern);
         String createdDate = formatter.format(new Date());
 
-        String insertQuery = String.format("insert into results (id, attempt_id, question, is_right, answer, options, create_date) VALUES ('%s', '%s', '%s', %s, '%s', '%s', '%s');",
-                id, attemptId, normalizeString(question), isRight, currentAnswer, options, createdDate);
+        String options = "";
+        if (type == TestType.normal || type == TestType.article)
+            options = getOptionsAsString(testQuestion.getOptions());
+
+        String insertQuery = String.format("insert into results (id, attempt_id, type, article, question, is_right, answer, answer_writing, options, create_date) VALUES ('%s', '%s', '%s', '%s', '%s', %s, '%s', '%s', '%s', '%s');",
+                id, attemptId, type.name(), normalizeString(article), normalizeString(question), isRight, currentAnswer, currentAnswer, options, createdDate);
 
         DatabaseHelper dbHelper = new DatabaseHelper();
         try {
@@ -77,7 +83,7 @@ public class ResultsHelper {
 
     public List<TestResult> getResultsByAttemptCode(CurrentUserTestState currentUserTestState) {
         String attemptId = findAttemptIdByAttemptCode(currentUserTestState);
-        String selectQuery = String.format("select question, options, answer, is_right from public.results where attempt_id  = '%s' order by create_date;", attemptId);
+        String selectQuery = String.format("select type, article, question, options, answer, is_right from public.results where attempt_id  = '%s' order by create_date;", attemptId);
 
         DatabaseHelper dbHelper = new DatabaseHelper();
         TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
@@ -86,13 +92,18 @@ public class ResultsHelper {
             ResultSet st = dbHelper.getPreparedStatement(selectQuery).executeQuery();
 
             while (st.next()) {
+                TestType testType = testQuestionMapper.mapTestType(st.getString(1));
                 Map<Option, String> optionMap = new HashMap<>();
-                String[] parsedGluing = st.getString(2).split("#");
-                for (String s : parsedGluing) {
-                    String[] parsedOptions = s.split("-");
-                    optionMap.put(testQuestionMapper.mapOption(parsedOptions[0]), parsedOptions[1]);
+                Option answer = Option.Z;
+                if (testType == TestType.normal || testType == TestType.article) {
+                    String[] parsedGluing = st.getString(4).split("#");
+                    for (String s : parsedGluing) {
+                        String[] parsedOptions = s.split("-");
+                        optionMap.put(testQuestionMapper.mapOption(parsedOptions[0]), parsedOptions[1]);
+                    }
+                    answer = testQuestionMapper.mapOption(st.getString(3));
                 }
-                result.add(new TestResult(st.getString(1), optionMap, testQuestionMapper.mapOption(st.getString(3)), st.getObject(4, Boolean.class)));
+                result.add(new TestResult(testType, st.getString(2), st.getString(3), optionMap, answer, st.getString(5), st.getObject(6, Boolean.class)));
             }
         } catch (SQLException e) {
             e.printStackTrace();
