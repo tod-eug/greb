@@ -10,6 +10,7 @@ public class CurrentUserTestState {
     private int currentQuestion;
     private final int testsMessageId;
     private List<Integer> messagesToDelete;
+    private int articleMessageID;
 
     public CurrentUserTestState(String testCode,
                                 Long userId,
@@ -17,7 +18,8 @@ public class CurrentUserTestState {
                                 String attemptCode,
                                 int currentQuestion,
                                 int testsMessageId,
-                                List<Integer> messagesToDelete) {
+                                List<Integer> messagesToDelete,
+                                Integer articleMessageID) {
         this.testCode = testCode;
         this.userId = userId;
         this.test = test;
@@ -25,6 +27,7 @@ public class CurrentUserTestState {
         this.currentQuestion = currentQuestion;
         this.testsMessageId = testsMessageId;
         this.messagesToDelete = messagesToDelete;
+        this.articleMessageID = articleMessageID;
     }
 
     public String getTestCode() {
@@ -61,5 +64,13 @@ public class CurrentUserTestState {
 
     public int getTestsMessageId() {
         return testsMessageId;
+    }
+
+    public int getArticleMessageID() {
+        return articleMessageID;
+    }
+
+    public void setArticleMessageID(Integer articleMessageID) {
+        this.articleMessageID = articleMessageID;
     }
 }

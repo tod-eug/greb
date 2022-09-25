@@ -168,7 +168,8 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 SendMessage sm = new SendMessage();
                 sm.setChatId(chatID);
                 sm.setText(text);
-                send(sm);
+                int articleMessageID = sendAndReturnMessageID(sm);
+                currentUserTestState.setArticleMessageID(articleMessageID);
             }
         }
 
@@ -186,6 +187,9 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             } else
                 send(sm);
         } else { //processing test result
+            if (testType == TestType.article || testType == TestType.articleWriting) { //if article -> delete message with article
+                deleteMessage(chatID, currentUserTestState.getArticleMessageID());
+            }
             List<TestResult> results = rh.getResultsByAttemptCode(currentUserTestState);
             int allQuestionsAmount = results.size();
             int rightAnswers = 0;
@@ -222,7 +226,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         List<TestQuestion> test = sheetsUtil.getTest(testCode);
         //put user into current attempt of chosen test
         List<Integer> optionMessages = new ArrayList<>();
-        CurrentUserTestState currentUserTestState = new CurrentUserTestState(testCode, userId, test, attemptCode, 0, testsMessageId, optionMessages);
+        CurrentUserTestState currentUserTestState = new CurrentUserTestState(testCode, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0);
         testStateMap.put(userId, currentUserTestState);
         //save attempt into db
         ResultsHelper rh = new ResultsHelper();
