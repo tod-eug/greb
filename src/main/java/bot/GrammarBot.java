@@ -2,14 +2,12 @@ package bot;
 
 import bot.command.StartCommand;
 import bot.command.TestsCommand;
-import bot.enums.Option;
 import bot.enums.TestType;
 import db.ResultsHelper;
 import dto.CurrentUserTestState;
 import bot.keyboards.OptionsKeyboard;
 import dto.TestQuestion;
 import dto.TestResult;
-import mapper.TestQuestionMapper;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -150,16 +148,16 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             //delete previous question
             if (update.hasCallbackQuery())
                 sendAnswerCallbackQuery(callbackQueryID, isRight);
-            if (testType == TestType.normal || testType == TestType.article)
-                deleteMessage(chatID, currentMessageId);
+            deleteMessage(chatID, currentMessageId);
+            if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
+                List<Integer> messagesToDelete = currentUserTestState.getMessagesToDelete();
+                for (Integer i : messagesToDelete) {
+                    deleteMessage(chatID, i);
+                }
+                List<Integer> newMessagesToDelete = new ArrayList<>();
+                currentUserTestState.setMessagesToDelete(newMessagesToDelete);
+            }
 //            rh.createResult(currentUserTestState, currentAnswer.toString(), isRight);
-        }
-
-        //add message ID of question to List to do something with it later. Since now bot deleting the question its useless
-        List<Integer> optionMessage = currentUserTestState.getOptionMessages();
-        if (currentUserTestState.getCurrentQuestion() != 0) { //skip because if its first question then previous question was message with list of Tests
-            optionMessage.add(currentMessageId);
-            currentUserTestState.setOptionMessages(optionMessage);
         }
 
         //send next question logic
@@ -179,7 +177,14 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             sm.setChatId(chatID);
             sm.setText(test.get(currentUserTestState.getCurrentQuestion()).getQuestion());
             sm.setReplyMarkup(OptionsKeyboard.getOptionKeyboard(currentUserTestState));
-            send(sm);
+            if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
+                //send message and store message id to delete it after answer
+                int messageId = sendAndReturnMessageID(sm);
+                List<Integer> messagesToDelete = currentUserTestState.getMessagesToDelete();
+                messagesToDelete.add(messageId);
+                currentUserTestState.setMessagesToDelete(messagesToDelete);
+            } else
+                send(sm);
         } else { //processing test result
             List<TestResult> results = rh.getResultsByAttemptCode(currentUserTestState);
             int allQuestionsAmount = results.size();
@@ -247,6 +252,16 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }
+    }
+
+    private int sendAndReturnMessageID(SendMessage sm) {
+        int messageId = 0;
+        try {
+            messageId = execute(sm).getMessageId();
+        } catch (TelegramApiException e) {
+            e.printStackTrace();
+        }
+        return messageId;
     }
 
     private void deleteMessage(long chatId, int messageId) {

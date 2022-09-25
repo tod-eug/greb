@@ -9,7 +9,7 @@ public class CurrentUserTestState {
     private final String attemptCode;
     private int currentQuestion;
     private final int testsMessageId;
-    private List<Integer> optionMessages;
+    private List<Integer> messagesToDelete;
 
     public CurrentUserTestState(String testCode,
                                 Long userId,
@@ -17,14 +17,14 @@ public class CurrentUserTestState {
                                 String attemptCode,
                                 int currentQuestion,
                                 int testsMessageId,
-                                List<Integer> optionMessages) {
+                                List<Integer> messagesToDelete) {
         this.testCode = testCode;
         this.userId = userId;
         this.test = test;
         this.attemptCode = attemptCode;
         this.currentQuestion = currentQuestion;
         this.testsMessageId = testsMessageId;
-        this.optionMessages = optionMessages;
+        this.messagesToDelete = messagesToDelete;
     }
 
     public String getTestCode() {
@@ -51,12 +51,12 @@ public class CurrentUserTestState {
         this.currentQuestion = currentQuestion;
     }
 
-    public List<Integer> getOptionMessages() {
-        return optionMessages;
+    public List<Integer> getMessagesToDelete() {
+        return messagesToDelete;
     }
 
-    public void setOptionMessages(List<Integer> optionMessages) {
-        this.optionMessages = optionMessages;
+    public void setMessagesToDelete(List<Integer> messagesToDelete) {
+        this.messagesToDelete = messagesToDelete;
     }
 
     public int getTestsMessageId() {
