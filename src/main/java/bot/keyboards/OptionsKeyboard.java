@@ -1,5 +1,6 @@
 package bot.keyboards;
 
+import bot.SysConstants;
 import bot.enums.Option;
 import dto.CurrentUserTestState;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
@@ -23,7 +24,10 @@ public class OptionsKeyboard {
                 for (Option o : optionsSet) {
                     InlineKeyboardButton button = new InlineKeyboardButton();
                     button.setText(options.get(o));
-                    button.setCallbackData("answer" + ":" + currentUserTestState.getAttemptCode() + ":" + currentUserTestState.getCurrentQuestion() + ":" + o.name());
+                    button.setCallbackData(SysConstants.QUESTIONS_CALLBACK_TYPE + SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK +
+                            currentUserTestState.getAttemptCode() + SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK +
+                            currentUserTestState.getCurrentQuestion() + SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK +
+                            o.name());
                     rowInline.add(button);
                 }
             }

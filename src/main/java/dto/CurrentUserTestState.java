@@ -1,32 +1,33 @@
 package dto;
 
-import dto.NormalTestQuestion;
-
 import java.util.List;
 
 public class CurrentUserTestState {
     private final String testCode;
     private final Long userId;
-    private final List<NormalTestQuestion> test;
+    private final List<TestQuestion> test;
     private final String attemptCode;
     private int currentQuestion;
     private final int testsMessageId;
-    private List<Integer> optionMessages;
+    private List<Integer> messagesToDelete;
+    private int articleMessageID;
 
     public CurrentUserTestState(String testCode,
                                 Long userId,
-                                List<NormalTestQuestion> test,
+                                List<TestQuestion> test,
                                 String attemptCode,
                                 int currentQuestion,
                                 int testsMessageId,
-                                List<Integer> optionMessages) {
+                                List<Integer> messagesToDelete,
+                                Integer articleMessageID) {
         this.testCode = testCode;
         this.userId = userId;
         this.test = test;
         this.attemptCode = attemptCode;
         this.currentQuestion = currentQuestion;
         this.testsMessageId = testsMessageId;
-        this.optionMessages = optionMessages;
+        this.messagesToDelete = messagesToDelete;
+        this.articleMessageID = articleMessageID;
     }
 
     public String getTestCode() {
@@ -41,7 +42,7 @@ public class CurrentUserTestState {
         return currentQuestion;
     }
 
-    public List<NormalTestQuestion> getTest() {
+    public List<TestQuestion> getTest() {
         return test;
     }
 
@@ -53,15 +54,23 @@ public class CurrentUserTestState {
         this.currentQuestion = currentQuestion;
     }
 
-    public List<Integer> getOptionMessages() {
-        return optionMessages;
+    public List<Integer> getMessagesToDelete() {
+        return messagesToDelete;
     }
 
-    public void setOptionMessages(List<Integer> optionMessages) {
-        this.optionMessages = optionMessages;
+    public void setMessagesToDelete(List<Integer> messagesToDelete) {
+        this.messagesToDelete = messagesToDelete;
     }
 
     public int getTestsMessageId() {
         return testsMessageId;
+    }
+
+    public int getArticleMessageID() {
+        return articleMessageID;
+    }
+
+    public void setArticleMessageID(Integer articleMessageID) {
+        this.articleMessageID = articleMessageID;
     }
 }

@@ -1,6 +1,6 @@
 package bot;
 
-public interface Constants {
+public interface ReplyConstants {
     /**
      * Strings for commands replies
      */
@@ -11,6 +11,7 @@ public interface Constants {
      * Other strings
      */
     String USE_TESTS_COMMAND = "Используйте команду /tests для просмотра доступных тестов по грамматике английского языка";
+    String SEND_ANSWER_AS_MESSAGE = "Please send answer as a message";
 
     /**
      * Strings for callbacks

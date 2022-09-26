@@ -1,13 +1,14 @@
 package sheets;
 
+import bot.enums.TestType;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.BatchGetValuesResponse;
 import com.google.api.services.sheets.v4.model.UpdateValuesResponse;
 import com.google.api.services.sheets.v4.model.ValueRange;
-import dto.NormalTestQuestion;
+import dto.TestQuestion;
 import dto.Test;
 import exceptions.ExecutingSheetException;
-import mapper.NormalTestQuestionMapper;
+import mapper.TestQuestionMapper;
 import mapper.TestMapper;
 import sheets.authorization.GoogleAuthorizeProvider;
 
@@ -16,13 +17,13 @@ import java.util.*;
 
 public class SheetsUtil {
 
-    private static String SPREADSHEET_ID = "1xXJgahgs3noBCc2SiMelmdqgjLll6MOY1AzhpaqloUE";
+    private static final String SPREADSHEET_ID = "1xXJgahgs3noBCc2SiMelmdqgjLll6MOY1AzhpaqloUE";
 
-    private static String TESTS_LIST_NAME = "tests";
-    private static int LINE_USED_FOR_ONE_TEST = 3;
-    private static int SPACE_BETWEEN_TESTS_LINES = 3;
-    private static String LATEST_COLUMN_TO_GET = "Z";
-    private static int HOW_MANY_ROWS_TO_GET = 100;
+    private static final String TESTS_LIST_NAME = "tests";
+    private static final int LINE_USED_FOR_ONE_TEST = 3;
+    private static final int SPACE_BETWEEN_TESTS_LINES = 3;
+    private static final String LATEST_COLUMN_TO_GET = "Z";
+    private static final int HOW_MANY_ROWS_TO_GET = 100;
 
 
     private Sheets sheet = GoogleAuthorizeProvider.getSheet();
@@ -41,12 +42,7 @@ public class SheetsUtil {
 
     public List<Test> getTests() {
         List<String> ranges = Arrays.asList(TESTS_LIST_NAME + "!A1:"+ LATEST_COLUMN_TO_GET + HOW_MANY_ROWS_TO_GET);
-        BatchGetValuesResponse readResult;
-        try {
-            readResult = sheet.spreadsheets().values().batchGet(SPREADSHEET_ID).setRanges(ranges).execute();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        BatchGetValuesResponse readResult = getResponseFromSheet(ranges);
 
         TestMapper mapper = new TestMapper();
         List<Test> result = new ArrayList<>();
@@ -65,27 +61,48 @@ public class SheetsUtil {
         return result;
     }
 
-    public List<NormalTestQuestion> getNormalTest(String testCode) {
+    public List<TestQuestion> getTest(String testCode) {
         List<String> ranges = Arrays.asList(testCode + "!A1:"+ LATEST_COLUMN_TO_GET + HOW_MANY_ROWS_TO_GET);
+        BatchGetValuesResponse readResult = getResponseFromSheet(ranges);
+
+        TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
+        List<TestQuestion> result = new ArrayList<>();
+        String testType = "";
+        String article = "";
+        String answerWriting = "";
+        TestType testTypeMapped = null;
+        Map<String, String> optionMap = new HashMap<>();
+
+        List<List<Object>> l = readResult.getValueRanges().get(0).getValues();
+        for (int i = 0; i < l.size(); i++) {
+            if (i == 0) {  //first line is test type
+                testType = l.get(i).get(0).toString();
+                testTypeMapped = testQuestionMapper.mapTestType(testType);
+                continue;
+            }
+            if (i == 1) //second line is header
+                continue;
+            if (i == 2) //article is always in third row and first column
+                article = l.get(i).get(0).toString();
+            if (testTypeMapped == TestType.normalWriting || testTypeMapped == TestType.articleWriting) //if answer should be written then no need to map options
+                answerWriting = l.get(i).get(2).toString();
+            else {
+                for (int k = 3; k < l.get(i).size(); k++) {
+                    optionMap.put(l.get(1).get(k).toString(), l.get(i).get(k).toString());
+                }
+            }
+            result.add(testQuestionMapper.mapQuestion(testType, article, l.get(i).get(1).toString(), l.get(i).get(2).toString(), answerWriting, optionMap));
+        }
+        return result;
+    }
+
+    private BatchGetValuesResponse getResponseFromSheet(List<String> ranges) {
         BatchGetValuesResponse readResult;
         try {
             readResult = sheet.spreadsheets().values().batchGet(SPREADSHEET_ID).setRanges(ranges).execute();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        NormalTestQuestionMapper normalTestQuestionMapper = new NormalTestQuestionMapper();
-        List<NormalTestQuestion> result = new ArrayList<>();
-        List<List<Object>> l = readResult.getValueRanges().get(0).getValues();
-        for (int i = 0; i < l.size(); i++) {
-                if (i == 0) //first line is header
-                    continue;
-                Map<String, String> optionMap = new HashMap<>();
-                for (int k = 2; k < l.get(i).size(); k++) {
-                    optionMap.put(l.get(0).get(k).toString(), l.get(i).get(k).toString());
-                }
-                result.add(normalTestQuestionMapper.mapQuestion(l.get(i).get(0).toString(), l.get(i).get(1).toString(), optionMap));
-        }
-        return result;
+        return readResult;
     }
 }
