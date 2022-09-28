@@ -8,6 +8,7 @@ import dto.CurrentUserTestState;
 import bot.keyboards.OptionsKeyboard;
 import dto.TestQuestion;
 import dto.TestResult;
+import org.telegram.telegrambots.Constants;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -56,8 +57,15 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         }
 
         if (update.hasMessage() && update.getMessage().hasText()) {
-            //ToDo
-            processNextQuestion(update, SysConstants.QUESTIONS_CALLBACK_TYPE);
+            Long userId = update.getMessage().getFrom().getId();
+            if (testStateMap.get(userId) != null)
+                if (testStateMap.get(userId).getTestType() == TestType.normalWriting || testStateMap.get(userId).getTestType() == TestType.articleWriting)
+                //add check for Test type
+                processNextQuestion(update, SysConstants.QUESTIONS_CALLBACK_TYPE);
+                else
+                    deleteMessage(update.getMessage().getChatId(), update.getMessage().getMessageId());
+            else
+                sendMsg(update.getMessage().getChatId(), ReplyConstants.USE_TESTS_COMMAND);
         }
     }
 
@@ -230,9 +238,10 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         //get Test by testCode
         SheetsUtil sheetsUtil = new SheetsUtil();
         List<TestQuestion> test = sheetsUtil.getTest(testCode);
+        TestType testType = test.get(0).getTestType();
         //put user into current attempt of chosen test
         List<Integer> optionMessages = new ArrayList<>();
-        CurrentUserTestState currentUserTestState = new CurrentUserTestState(testCode, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0);
+        CurrentUserTestState currentUserTestState = new CurrentUserTestState(testCode, testType, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0);
         testStateMap.put(userId, currentUserTestState);
         //save attempt into db
         ResultsHelper rh = new ResultsHelper();

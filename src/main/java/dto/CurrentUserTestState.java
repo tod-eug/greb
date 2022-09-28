@@ -1,9 +1,12 @@
 package dto;
 
+import bot.enums.TestType;
+
 import java.util.List;
 
 public class CurrentUserTestState {
     private final String testCode;
+    private final TestType testType;
     private final Long userId;
     private final List<TestQuestion> test;
     private final String attemptCode;
@@ -13,6 +16,7 @@ public class CurrentUserTestState {
     private int articleMessageID;
 
     public CurrentUserTestState(String testCode,
+                                TestType testType,
                                 Long userId,
                                 List<TestQuestion> test,
                                 String attemptCode,
@@ -21,6 +25,7 @@ public class CurrentUserTestState {
                                 List<Integer> messagesToDelete,
                                 Integer articleMessageID) {
         this.testCode = testCode;
+        this.testType = testType;
         this.userId = userId;
         this.test = test;
         this.attemptCode = attemptCode;
@@ -32,6 +37,10 @@ public class CurrentUserTestState {
 
     public String getTestCode() {
         return testCode;
+    }
+
+    public TestType getTestType() {
+        return testType;
     }
 
     public Long getUserId() {
