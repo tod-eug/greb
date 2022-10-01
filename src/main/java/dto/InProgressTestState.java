@@ -4,7 +4,7 @@ import bot.enums.TestType;
 
 import java.util.List;
 
-public class CurrentUserTestState {
+public class InProgressTestState {
     private final String testCode;
     private final TestType testType;
     private final Long userId;
@@ -15,15 +15,15 @@ public class CurrentUserTestState {
     private List<Integer> messagesToDelete;
     private int articleMessageID;
 
-    public CurrentUserTestState(String testCode,
-                                TestType testType,
-                                Long userId,
-                                List<TestQuestion> test,
-                                String attemptCode,
-                                int currentQuestion,
-                                int testsMessageId,
-                                List<Integer> messagesToDelete,
-                                Integer articleMessageID) {
+    public InProgressTestState(String testCode,
+                               TestType testType,
+                               Long userId,
+                               List<TestQuestion> test,
+                               String attemptCode,
+                               int currentQuestion,
+                               int testsMessageId,
+                               List<Integer> messagesToDelete,
+                               Integer articleMessageID) {
         this.testCode = testCode;
         this.testType = testType;
         this.userId = userId;

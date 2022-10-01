@@ -2,13 +2,14 @@ package bot;
 
 import bot.command.StartCommand;
 import bot.command.TestsCommand;
+import bot.enums.State;
 import bot.enums.TestType;
 import db.ResultsHelper;
-import dto.CurrentUserTestState;
+import dto.ChoosingTestState;
+import dto.InProgressTestState;
 import bot.keyboards.OptionsKeyboard;
 import dto.TestQuestion;
 import dto.TestResult;
-import org.telegram.telegrambots.Constants;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -27,8 +28,9 @@ import java.util.Map;
 
 public class GrammarBot extends TelegramLongPollingCommandBot {
 
-    private static Map<Long, String> stateMap = new HashMap<>();
-    private static Map<Long, CurrentUserTestState> testStateMap = new HashMap<>();
+    public static Map<Long, State> stateMap = new HashMap<>();
+    public static Map<Long, ChoosingTestState> choosingTestStateMap = new HashMap<>();
+    public static Map<Long, InProgressTestState> inProgressStateMap = new HashMap<>();
 
     public GrammarBot() {
         super();
@@ -58,8 +60,8 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
 
         if (update.hasMessage() && update.getMessage().hasText()) {
             Long userId = update.getMessage().getFrom().getId();
-            if (testStateMap.get(userId) != null)
-                if (testStateMap.get(userId).getTestType() == TestType.normalWriting || testStateMap.get(userId).getTestType() == TestType.articleWriting)
+            if (inProgressStateMap.get(userId) != null)
+                if (inProgressStateMap.get(userId).getTestType() == TestType.normalWriting || inProgressStateMap.get(userId).getTestType() == TestType.articleWriting)
                 //add check for Test type
                 processNextQuestion(update, SysConstants.QUESTIONS_CALLBACK_TYPE);
                 else
@@ -90,8 +92,14 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
 
     private void processCallbackQuery(Update update) {
         Long userId = update.getCallbackQuery().getFrom().getId();
+        State state = null;
+        if (stateMap.get(userId) != null)
+            state = stateMap.get(userId);
+        else
+            state = State.FREE;
 
         //callback type checking logic
+        String[] parsedCallbackForCategories = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_CATEGORIES_CALLBACK);
         String[] parsedCallbackForTests = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_TESTS_CALLBACK);
         String[] parsedCallbackForQuestion = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK);
         String callbackType = "";
@@ -99,12 +107,19 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             callbackType = SysConstants.TESTS_CALLBACK_TYPE;
         else if (parsedCallbackForQuestion[SysConstants.NUMBER_OF_CALLBACK_TYPE_IN_CALLBACK].equals(SysConstants.QUESTIONS_CALLBACK_TYPE))
             callbackType = SysConstants.QUESTIONS_CALLBACK_TYPE;
+        else if (parsedCallbackForCategories[SysConstants.NUMBER_OF_CALLBACK_TYPE_IN_CALLBACK].equals(SysConstants.CATEGORIES_CALLBACK_TYPE))
+            callbackType = SysConstants.CATEGORIES_CALLBACK_TYPE;
 
         //process logic
-        if (testStateMap.get(userId) == null && callbackType.equals(SysConstants.TESTS_CALLBACK_TYPE)) {
+        if (state == State.TEST_CHOOSING && callbackType == SysConstants.CATEGORIES_CALLBACK_TYPE && choosingTestStateMap.get(userId) != null) {
+            CategoriesTestsLogicHelper categoriesTestsLogicHelper = new CategoriesTestsLogicHelper();
+            categoriesTestsLogicHelper.processTestChoosing(choosingTestStateMap.get(userId));
+        }
+
+        if (inProgressStateMap.get(userId) == null && callbackType.equals(SysConstants.TESTS_CALLBACK_TYPE)) {
             String testCode = parsedCallbackForTests[SysConstants.NUMBER_OF_TEST_TYPE_IN_CALLBACK];
             initiateNewTestAttempt(update, testCode, userId, callbackType);
-        } else if (testStateMap.get(userId) != null && callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
+        } else if (inProgressStateMap.get(userId) != null && callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
             processNextQuestion(update, callbackType);
         } else {
             sendMsg(update.getCallbackQuery().getMessage().getChatId(), ReplyConstants.USE_TESTS_COMMAND);
@@ -112,14 +127,14 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
     }
 
     private void processNextQuestion(Update update, String callbackType) {
-        CurrentUserTestState currentUserTestState = null;
+        InProgressTestState inProgressTestState = null;
         Long chatID = null;
         Long userId = null;
         Integer currentMessageId = null;
         String callbackQueryID = "";
         String currentAnswer = "";
         if (update.hasMessage()) {
-            currentUserTestState = testStateMap.get(update.getMessage().getFrom().getId());
+            inProgressTestState = inProgressStateMap.get(update.getMessage().getFrom().getId());
             chatID = update.getMessage().getChatId();
             userId = update.getMessage().getFrom().getId();
             currentMessageId = update.getMessage().getMessageId();
@@ -127,7 +142,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         }
 
         else if (update.hasCallbackQuery()) {
-            currentUserTestState = testStateMap.get(update.getCallbackQuery().getFrom().getId());
+            inProgressTestState = inProgressStateMap.get(update.getCallbackQuery().getFrom().getId());
             chatID = update.getCallbackQuery().getMessage().getChatId();
             userId = update.getCallbackQuery().getFrom().getId();
             currentMessageId = update.getCallbackQuery().getMessage().getMessageId();
@@ -138,8 +153,8 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             }
         }
 
-        TestType testType = currentUserTestState.getTest().get(0).getTestType();
-        List<TestQuestion> test = currentUserTestState.getTest();
+        TestType testType = inProgressTestState.getTest().get(0).getTestType();
+        List<TestQuestion> test = inProgressTestState.getTest();
 
         ResultsHelper rh = new ResultsHelper();
         EvaluateAnswerHelper evaluateAnswerHelper = new EvaluateAnswerHelper();
@@ -148,7 +163,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         boolean isRight = false;
         if (callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
             if (testType == TestType.normal || testType == TestType.article)
-                isRight = evaluateAnswerHelper.evaluateOptionAnswer(update, currentUserTestState);
+                isRight = evaluateAnswerHelper.evaluateOptionAnswer(update, inProgressTestState);
             else if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
                 String userMessage = "";
                 if (update.hasMessage()) {
@@ -156,7 +171,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 } else {
                     sendMsg(chatID, ReplyConstants.SEND_ANSWER_AS_MESSAGE);
                 }
-                isRight = evaluateAnswerHelper.evaluateWrittenAnswer(update, currentUserTestState, userMessage);
+                isRight = evaluateAnswerHelper.evaluateWrittenAnswer(update, inProgressTestState, userMessage);
             }
 
             //delete previous question
@@ -164,60 +179,60 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 sendAnswerCallbackQuery(callbackQueryID, isRight);
             deleteMessage(chatID, currentMessageId);
             if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
-                List<Integer> messagesToDelete = currentUserTestState.getMessagesToDelete();
+                List<Integer> messagesToDelete = inProgressTestState.getMessagesToDelete();
                 for (Integer i : messagesToDelete) {
                     deleteMessage(chatID, i);
                 }
                 List<Integer> newMessagesToDelete = new ArrayList<>();
-                currentUserTestState.setMessagesToDelete(newMessagesToDelete);
+                inProgressTestState.setMessagesToDelete(newMessagesToDelete);
             }
-            rh.createResult(currentUserTestState, currentAnswer, isRight);
+            rh.createResult(inProgressTestState, currentAnswer, isRight);
         }
 
         //send next question logic
-        int currentQuestion = currentUserTestState.getCurrentQuestion();
+        int currentQuestion = inProgressTestState.getCurrentQuestion();
         if (testType == TestType.article || testType == TestType.articleWriting) { //if article -> send article before questions
             if (currentQuestion == 0) {
-                String text = currentUserTestState.getTest().get(0).getArticle();
+                String text = inProgressTestState.getTest().get(0).getArticle();
                 SendMessage sm = new SendMessage();
                 sm.setChatId(chatID);
                 sm.setText(text);
                 int articleMessageID = sendAndReturnMessageID(sm);
-                currentUserTestState.setArticleMessageID(articleMessageID);
+                inProgressTestState.setArticleMessageID(articleMessageID);
             }
         }
 
         if (currentQuestion < test.size()) { //if its not last question send next one
             SendMessage sm = new SendMessage();
             sm.setChatId(chatID);
-            sm.setText(test.get(currentUserTestState.getCurrentQuestion()).getQuestion());
-            sm.setReplyMarkup(OptionsKeyboard.getOptionKeyboard(currentUserTestState));
+            sm.setText(test.get(inProgressTestState.getCurrentQuestion()).getQuestion());
+            sm.setReplyMarkup(OptionsKeyboard.getOptionKeyboard(inProgressTestState));
             if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
                 //send message and store message id to delete it after answer
                 int messageId = sendAndReturnMessageID(sm);
-                List<Integer> messagesToDelete = currentUserTestState.getMessagesToDelete();
+                List<Integer> messagesToDelete = inProgressTestState.getMessagesToDelete();
                 messagesToDelete.add(messageId);
-                currentUserTestState.setMessagesToDelete(messagesToDelete);
+                inProgressTestState.setMessagesToDelete(messagesToDelete);
             } else
                 send(sm);
         } else { //processing test result
             if (testType == TestType.article || testType == TestType.articleWriting) { //if article -> delete message with article
-                deleteMessage(chatID, currentUserTestState.getArticleMessageID());
+                deleteMessage(chatID, inProgressTestState.getArticleMessageID());
             }
-            List<TestResult> results = rh.getResultsByAttemptCode(currentUserTestState);
+            List<TestResult> results = rh.getResultsByAttemptCode(inProgressTestState);
             int allQuestionsAmount = results.size();
             int rightAnswers = 0;
             for (TestResult nr : results) {
                 if (nr.isRight())
                     rightAnswers++;
             }
-            String text = "Completed! Test code: "+ currentUserTestState.getTestCode() +"\nAll questions: " + allQuestionsAmount + ". Right answers: " + rightAnswers + ".";
-            editMessage(chatID, currentUserTestState.getTestsMessageId(), text);
+            String text = "Completed! Test code: "+ inProgressTestState.getTestCode() +"\nAll questions: " + allQuestionsAmount + ". Right answers: " + rightAnswers + ".";
+            editMessage(chatID, inProgressTestState.getTestsMessageId(), text);
 
             //reset user test state
-            testStateMap.remove(userId);
+            inProgressStateMap.remove(userId);
         }
-        currentUserTestState.setCurrentQuestion(++currentQuestion);
+        inProgressTestState.setCurrentQuestion(++currentQuestion);
     }
 
     private void sendMsg(long chatId, String text) {
@@ -241,11 +256,11 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         TestType testType = test.get(0).getTestType();
         //put user into current attempt of chosen test
         List<Integer> optionMessages = new ArrayList<>();
-        CurrentUserTestState currentUserTestState = new CurrentUserTestState(testCode, testType, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0);
-        testStateMap.put(userId, currentUserTestState);
+        InProgressTestState inProgressTestState = new InProgressTestState(testCode, testType, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0);
+        inProgressStateMap.put(userId, inProgressTestState);
         //save attempt into db
         ResultsHelper rh = new ResultsHelper();
-        rh.createAttempt(currentUserTestState, update.getCallbackQuery().getFrom());
+        rh.createAttempt(inProgressTestState, update.getCallbackQuery().getFrom());
 
         processNextQuestion(update, callbackType);
     }

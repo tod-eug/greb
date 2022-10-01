@@ -40,6 +40,10 @@ public class SheetsUtil {
         }
     }
 
+    public Map<String, List<Test>> getTestCategories() {
+
+    }
+
     public List<Test> getTests() {
         List<String> ranges = Arrays.asList(TESTS_LIST_NAME + "!A1:"+ LATEST_COLUMN_TO_GET + HOW_MANY_ROWS_TO_GET);
         BatchGetValuesResponse readResult = getResponseFromSheet(ranges);
