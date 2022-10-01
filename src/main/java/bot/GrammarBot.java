@@ -234,6 +234,8 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         List<Integer> optionMessages = new ArrayList<>();
         CurrentUserTestState currentUserTestState = new CurrentUserTestState(testCode, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0);
         testStateMap.put(userId, currentUserTestState);
+        //delete keyboard from the previous message
+        editMessage(update.getCallbackQuery().getMessage().getChatId(), testsMessageId, update.getCallbackQuery().getMessage().getText());
         //save attempt into db
         ResultsHelper rh = new ResultsHelper();
         rh.createAttempt(currentUserTestState, update.getCallbackQuery().getFrom());
