@@ -151,9 +151,11 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 isRight = evaluateAnswerHelper.evaluateWrittenAnswer(update, currentUserTestState, userMessage);
             }
 
-            //delete previous question
+            //send answer to callbackQuery
             if (update.hasCallbackQuery())
                 sendAnswerCallbackQuery(callbackQueryID, isRight);
+
+            //delete previous question
             deleteMessage(chatID, currentMessageId);
             if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
                 List<Integer> messagesToDelete = currentUserTestState.getMessagesToDelete();
