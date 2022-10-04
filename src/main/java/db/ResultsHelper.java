@@ -15,12 +15,12 @@ import java.util.*;
 
 public class ResultsHelper {
 
-    public void createAttempt(CurrentUserTestState currentUserTestState, User user) {
+    public void createAttempt(CurrentUserTestState currentUserTestState, User user, String chatId) {
         UUID id = UUID.randomUUID();
         SimpleDateFormat formatter = new SimpleDateFormat(DatabaseHelper.pattern);
         String createdDate = formatter.format(new Date());
         UsersHelper uh = new UsersHelper();
-        String userId = uh.findUserByTgId(currentUserTestState.getUserId().toString(), user);
+        String userId = uh.findUserByTgId(currentUserTestState.getUserId().toString(), user, chatId);
 
         String insertQuery = String.format("insert into attempt (id, user_id, test_code, attempt_code, create_date) VALUES ('%s', '%s', '%s', '%s', '%s');",
                 id, userId, currentUserTestState.getTestCode(), currentUserTestState.getAttemptCode(), createdDate);

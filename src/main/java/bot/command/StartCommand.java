@@ -27,6 +27,6 @@ public class StartCommand implements IBotCommand {
         mp.sendMsg(absSender, sm);
 
         UsersHelper uh = new UsersHelper();
-        String userId = uh.findUserByTgId(message.getFrom().getId().toString(), message.getFrom());
+        String userId = uh.findUserByTgId(message.getFrom().getId().toString(), message.getFrom(), message.getChatId().toString());
     }
 }

@@ -240,7 +240,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         editMessage(update.getCallbackQuery().getMessage().getChatId(), testsMessageId, update.getCallbackQuery().getMessage().getText());
         //save attempt into db
         ResultsHelper rh = new ResultsHelper();
-        rh.createAttempt(currentUserTestState, update.getCallbackQuery().getFrom());
+        rh.createAttempt(currentUserTestState, update.getCallbackQuery().getFrom(), update.getMessage().getChatId().toString());
 
         processNextQuestion(update, callbackType);
     }

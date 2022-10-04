@@ -10,7 +10,7 @@ import java.util.UUID;
 
 public class UsersHelper {
 
-    public String createUser(User user) {
+    public String createUser(User user, String chatId) {
 
         String tgId = user.getId().toString();
         String userName = user.getUserName();
@@ -24,8 +24,8 @@ public class UsersHelper {
 
         UUID id = UUID.randomUUID();
 
-        String insertQuery = String.format("insert into users (id, tg_id, user_name, first_name, last_name, is_bot, language_code, create_date) VALUES ('%s', '%s', '%s', '%s', '%s', %s, '%s', '%s');",
-                id, tgId, userName, firstName, lastName, isBot, languageCode, createdDate);
+        String insertQuery = String.format("insert into users (id, tg_id, chat_id, user_name, first_name, last_name, is_bot, language_code, create_date) VALUES ('%s', '%s', '%s', '%s', '%s', '%s', %s, '%s', '%s');",
+                id, tgId, chatId, userName, firstName, lastName, isBot, languageCode, createdDate);
 
         DatabaseHelper dbHelper = new DatabaseHelper();
         try {
@@ -38,7 +38,7 @@ public class UsersHelper {
         return id.toString();
     }
 
-    public String findUserByTgId(String tgId, User user) {
+    public String findUserByTgId(String tgId, User user, String chatId) {
         String selectQuery = String.format("select id from public.users where tg_id = '%s';", tgId);
 
         DatabaseHelper dbHelper = new DatabaseHelper();
@@ -55,7 +55,7 @@ public class UsersHelper {
         }
 
         if (id.equals(""))
-            id = createUser(user);
+            id = createUser(user, chatId);
         return id;
     }
 }
