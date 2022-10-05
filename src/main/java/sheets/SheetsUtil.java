@@ -1,5 +1,6 @@
 package sheets;
 
+import bot.SysConstants;
 import bot.enums.TestType;
 import com.google.api.services.sheets.v4.Sheets;
 import com.google.api.services.sheets.v4.model.BatchGetValuesResponse;
@@ -38,6 +39,32 @@ public class SheetsUtil {
         } catch (IOException e) {
             throw new ExecutingSheetException("Error when writing sheet");
         }
+    }
+
+    public Map<String, List<Test>> getTestCategories() {
+        List<String> ranges = Arrays.asList(TESTS_LIST_NAME + "!A1:"+ LATEST_COLUMN_TO_GET + HOW_MANY_ROWS_TO_GET);
+        BatchGetValuesResponse readResult = getResponseFromSheet(ranges);
+
+        TestMapper mapper = new TestMapper();
+        Map<String, List<Test>> result = new HashMap<>();
+        List<List<Object>> l = readResult.getValueRanges().get(0).getValues();
+        for (int i = 0; i < l.size(); i++) {
+            List<Test> list = new ArrayList<>();
+            if ((i % ( LINE_USED_FOR_ONE_TEST + SPACE_BETWEEN_TESTS_LINES)) == 0 ) {
+                String category = l.get(i).get(0).toString();
+                if (category.equals(SysConstants.IGNORE_CATEGORY_STRING))
+                    break;
+                for (int j = 0; j < l.get(i).size() - 1; j++) { //l.get(i).size() - 1 because first column is category
+                    if (l.get(i).get(j + 1) != null) {
+                        Test test = mapper.mapTest(l.get(i).get(j + 1).toString(), l.get(i + 1).get(j + 1).toString(), l.get(i + 2).get(j + 1).toString());
+                        if (!test.getName().equals(""))
+                            list.add(test);
+                    }
+                }
+                result.put(category, list);
+            }
+        }
+        return result;
     }
 
     public List<Test> getTests() {

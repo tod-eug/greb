@@ -1,7 +1,7 @@
 package bot;
 
 import bot.enums.Option;
-import dto.CurrentUserTestState;
+import dto.ProcessingTestState;
 import mapper.TestQuestionMapper;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -10,17 +10,17 @@ import java.util.Map;
 
 public class EvaluateAnswerHelper {
 
-    public boolean evaluateOptionAnswer(Update update, CurrentUserTestState currentUserTestState) {
+    public boolean evaluateOptionAnswer(Update update, ProcessingTestState processingTestState) {
         TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
         String[] parsedCallbackForOptions = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK);
         Option currentAnswer = testQuestionMapper.mapOption(parsedCallbackForOptions[SysConstants.NUMBER_OF_RESULTS_IN_CALLBACK]);
-        Option expectedAnswer = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1).getAnswer();
+        Option expectedAnswer = processingTestState.getTest().get(processingTestState.getCurrentQuestion() - 1).getAnswer();
         return currentAnswer.equals(expectedAnswer);
     }
 
-    public boolean evaluateWrittenAnswer(Update update, CurrentUserTestState currentUserTestState, String userMessage) {
+    public boolean evaluateWrittenAnswer(Update update, ProcessingTestState processingTestState, String userMessage) {
         boolean isRight = false;
-        String[] options = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1)
+        String[] options = processingTestState.getTest().get(processingTestState.getCurrentQuestion() - 1)
                 .getAnswerWriting().split(SysConstants.DELIMITER_FOR_ALTERNATIVE_OPTIONS);
         //if there are more than one question in this question
         if (options.length > 1) { //1.test # test  2.test # test
@@ -43,7 +43,7 @@ public class EvaluateAnswerHelper {
             }
             //if in question only one question
         } else {
-            String[] optionsSplitted = currentUserTestState.getTest().get(currentUserTestState.getCurrentQuestion() - 1)
+            String[] optionsSplitted = processingTestState.getTest().get(processingTestState.getCurrentQuestion() - 1)
                     .getAnswerWriting().split(SysConstants.DELIMITER_FOR_WRITTEN_ANSWERS);
             isRight = false;
             for (String s : optionsSplitted) {
