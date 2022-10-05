@@ -43,7 +43,7 @@ public class TestsCommand implements IBotCommand {
         MessageProcessor mp = new MessageProcessor();
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
-        sendMessage.setText(ReplyConstants.LIST_OF_CATEGORIES + categoriesList);
+        sendMessage.setText(ReplyConstants.TESTS_COMMAND + categoriesList);
         sendMessage.setReplyMarkup(CategoriesKeyboard.getCategoriesKeyboard(set, message.getFrom()));
         mp.sendMsg(absSender, sendMessage);
 
