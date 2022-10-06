@@ -10,6 +10,7 @@ import dto.*;
 import bot.keyboards.OptionsKeyboard;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.meta.api.methods.AnswerCallbackQuery;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -215,6 +216,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 SendMessage sm = new SendMessage();
                 sm.setChatId(chatID);
                 sm.setText(text);
+                sm.setParseMode(ParseMode.HTML);
                 int articleMessageID = sendAndReturnMessageID(sm);
                 processingTestState.setArticleMessageID(articleMessageID);
             }
@@ -224,6 +226,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             SendMessage sm = new SendMessage();
             sm.setChatId(chatID);
             sm.setText(test.get(processingTestState.getCurrentQuestion()).getQuestion());
+            sm.setParseMode(ParseMode.HTML);
             sm.setReplyMarkup(OptionsKeyboard.getOptionKeyboard(processingTestState));
             if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
                 //send message and store message id to delete it after answer
