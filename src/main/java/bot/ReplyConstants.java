@@ -6,6 +6,7 @@ public interface ReplyConstants {
      */
     String START_REPLY_WELCOME = "Welcome! ";
     String TESTS_COMMAND = "All tests are split by category. List of available categories: \n";
+    String CANCEL_REPLY_RESET = "Cancelling current test.";
 
     /**
      * Other strings

@@ -1,5 +1,6 @@
 package bot;
 
+import bot.command.CancelCommand;
 import bot.command.StartCommand;
 import bot.command.TestsCommand;
 import bot.enums.State;
@@ -33,6 +34,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         super();
         register(new StartCommand());
         register(new TestsCommand());
+        register(new CancelCommand());
     }
     @Override
     public String getBotUsername() {
