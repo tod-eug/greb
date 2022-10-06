@@ -281,7 +281,10 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         editMessage(update.getCallbackQuery().getMessage().getChatId(), testsMessageId, update.getCallbackQuery().getMessage().getText());
         //save attempt into db
         ResultsHelper rh = new ResultsHelper();
-        rh.createAttempt(processingTestState, update.getCallbackQuery().getFrom(), update.getCallbackQuery().getMessage().getChatId().toString());
+        if (update.hasCallbackQuery())
+            rh.createAttempt(processingTestState, update.getCallbackQuery().getFrom(), update.getCallbackQuery().getMessage().getChatId().toString());
+        else if (update.hasMessage())
+            rh.createAttempt(processingTestState, update.getCallbackQuery().getFrom(), update.getMessage().getChatId().toString());
 
         processNextQuestion(update, callbackType);
     }
