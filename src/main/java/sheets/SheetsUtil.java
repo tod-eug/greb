@@ -15,8 +15,8 @@ public class SheetsUtil {
 
     private static final String SPREADSHEET_ID = "1xXJgahgs3noBCc2SiMelmdqgjLll6MOY1AzhpaqloUE";
 
-    public static Map<String, List<String>> categories = new HashMap<>(); //category, list of test codes
-    public static Map<String, List<TestQuestion>> tests = new HashMap<>(); //test code, test
+    private static final Map<String, List<String>> categories = new HashMap<>(); //category, list of test codes
+    private static final Map<String, List<TestQuestion>> tests = new HashMap<>(); //test code, test
 
     private static final String TESTS_LIST_NAME = "tests";
     private static final String LATEST_COLUMN_TO_GET = "Z";
@@ -29,13 +29,20 @@ public class SheetsUtil {
 
     private static Sheets sheet = GoogleAuthorizeProvider.getSheet();
 
-
     public static void setup() {
-        getCategories();
-        getTests();
+        loadCategories();
+        loadTests();
     }
 
-    private static void getCategories() {
+    public static Map<String, List<String>> getCategories() {
+        return categories;
+    }
+
+    public static Map<String, List<TestQuestion>> getTests() {
+        return tests;
+    }
+
+    private static void loadCategories() {
         List<String> ranges = Arrays.asList(TESTS_LIST_NAME + "!A1:"+ LATEST_COLUMN_TO_GET + HOW_MANY_ROWS_TO_GET);
         BatchGetValuesResponse readResult = getResponseFromSheet(ranges);
 
@@ -54,7 +61,7 @@ public class SheetsUtil {
         }
     }
 
-    public static void getTests() {
+    private static void loadTests() {
         List<String> ranges = new ArrayList<>();
 
         //create list to request all tests from sheet
@@ -63,9 +70,12 @@ public class SheetsUtil {
             ranges.add(s + "!A1:" + LATEST_COLUMN_TO_GET + HOW_MANY_ROWS_TO_GET);
         }
 
-        //get raw data from sheet
+        //get raw data from sheet and parse result
         BatchGetValuesResponse readResult = getResponseFromSheet(ranges);
+        parseTestsFromValueRanges(readResult.getValueRanges());
+    }
 
+    private static void parseTestsFromValueRanges(List<ValueRange> valueRanges) {
         TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
         List<TestQuestion> test = new ArrayList<>();
         String testCode = "";
@@ -76,7 +86,6 @@ public class SheetsUtil {
         String answerWriting = "";
         TestType testTypeMapped = null;
 
-        List<ValueRange> valueRanges = readResult.getValueRanges();
         for (ValueRange vr: valueRanges) { //iterate by lists from sheet
             List<List<Object>> l = vr.getValues();
             for (int i = 0; i < l.size(); i++) {
