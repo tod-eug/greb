@@ -114,7 +114,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                     } else if (choosingTestState.getTestName().equals("")) {
                         //save test and initiate new attempt
                         String testCode = parsedCallbackForTests[SysConstants.NUMBER_OF_TEST_TYPE_IN_CALLBACK];
-                        initiateNewTestAttempt(update, testCode, userId, callbackType);
+                        initiateNewTestAttempt(update, choosingTestState.getCategory(), testCode, userId, callbackType);
                         stateMap.put(userId, State.PROCESSING_TEST);
                     } else {
                         processNextQuestion(update, callbackType);
@@ -131,7 +131,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                     processNextQuestion(update, callbackType);
                 } else {
                     String testCode = parsedCallbackForTests[SysConstants.NUMBER_OF_TEST_TYPE_IN_CALLBACK];
-                    initiateNewTestAttempt(update, testCode, userId, callbackType);
+                    initiateNewTestAttempt(update, processingStateMap.get(userId).getCategory(), testCode, userId, callbackType);
                 }
             } else {
                 //pressed button with category while doing the test
@@ -267,18 +267,17 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private void initiateNewTestAttempt(Update update, String testCode, Long userId, String callbackType) {
+    private void initiateNewTestAttempt(Update update, String category, String testCode, Long userId, String callbackType) {
         choosingStateMap.remove(userId);
 
         String attemptCode = update.getCallbackQuery().getData();
         int testsMessageId = update.getCallbackQuery().getMessage().getMessageId();
 
         //get Test by testCode
-        SheetsUtil sheetsUtil = new SheetsUtil();
-        List<TestQuestion> test = sheetsUtil.getTest(testCode);
+        List<TestQuestion> test = SheetsUtil.getTest(category, testCode);
         //put user into current attempt of chosen test
         List<Integer> optionMessages = new ArrayList<>();
-        ProcessingTestState processingTestState = new ProcessingTestState(testCode, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0);
+        ProcessingTestState processingTestState = new ProcessingTestState(category, testCode, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0);
         processingStateMap.put(userId, processingTestState);
         //delete keyboard from the previous message
         editMessage(update.getCallbackQuery().getMessage().getChatId(), testsMessageId, update.getCallbackQuery().getMessage().getText());

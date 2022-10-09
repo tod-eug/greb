@@ -4,6 +4,7 @@ import java.util.List;
 
 public class ProcessingTestState {
 
+    private final String category;
     private final String testCode;
     private final Long userId;
     private final List<TestQuestion> test;
@@ -13,7 +14,8 @@ public class ProcessingTestState {
     private List<Integer> messagesToDelete;
     private int articleMessageID;
 
-    public ProcessingTestState(String testCode,
+    public ProcessingTestState( String category,
+                                String testCode,
                                 Long userId,
                                 List<TestQuestion> test,
                                 String attemptCode,
@@ -21,6 +23,7 @@ public class ProcessingTestState {
                                 int testsMessageId,
                                 List<Integer> messagesToDelete,
                                 Integer articleMessageID) {
+        this.category = category;
         this.testCode = testCode;
         this.userId = userId;
         this.test = test;
@@ -31,6 +34,7 @@ public class ProcessingTestState {
         this.articleMessageID = articleMessageID;
     }
 
+    public String getCategory() { return category; }
     public String getTestCode() {
         return testCode;
     }
