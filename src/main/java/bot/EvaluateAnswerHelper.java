@@ -2,10 +2,13 @@ package bot;
 
 import bot.enums.Option;
 import dto.ProcessingTestState;
+import dto.TestQuestion;
+import dto.TestResult;
 import mapper.TestQuestionMapper;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class EvaluateAnswerHelper {
@@ -15,7 +18,17 @@ public class EvaluateAnswerHelper {
         String[] parsedCallbackForOptions = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK);
         Option currentAnswer = testQuestionMapper.mapOption(parsedCallbackForOptions[SysConstants.NUMBER_OF_RESULTS_IN_CALLBACK]);
         Option expectedAnswer = processingTestState.getTest().get(processingTestState.getCurrentQuestion() - 1).getAnswer();
-        return currentAnswer.equals(expectedAnswer);
+        boolean isRight = currentAnswer.equals(expectedAnswer);
+
+        //save answer into the state
+        List<TestQuestion> test = processingTestState.getTest();
+        List<TestResult> results = processingTestState.getResults();
+        results.add(new TestResult(test.get(0).getTestType(), test.get(0).getArticle(), test.get(processingTestState.getCurrentQuestion() - 1).getQuestion(),
+                test.get(processingTestState.getCurrentQuestion() - 1).getOptions(), currentAnswer, "", isRight));
+        processingTestState.setResults(results);
+        GrammarBot.processingStateMap.put(update.getCallbackQuery().getFrom().getId(), processingTestState);
+
+        return isRight;
     }
 
     public boolean evaluateWrittenAnswer(Update update, ProcessingTestState processingTestState, String userMessage) {
@@ -51,6 +64,15 @@ public class EvaluateAnswerHelper {
                     isRight = true;
             }
         }
+
+        //save answer into the state
+        List<TestQuestion> test = processingTestState.getTest();
+        List<TestResult> results = processingTestState.getResults();
+        results.add(new TestResult(test.get(0).getTestType(), test.get(0).getArticle(), test.get(processingTestState.getCurrentQuestion()).getQuestion(),
+                test.get(processingTestState.getCurrentQuestion()).getOptions(), Option.A, userMessage, isRight));
+        processingTestState.setResults(results);
+        GrammarBot.processingStateMap.put(update.getCallbackQuery().getFrom().getId(), processingTestState);
+
         return isRight;
     }
 }

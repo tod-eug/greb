@@ -190,6 +190,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 }
                 isRight = evaluateAnswerHelper.evaluateWrittenAnswer(update, processingTestState, userMessage);
             }
+            processingTestState = processingStateMap.get(userId);
 
             //send answer to callbackQuery
             if (update.hasCallbackQuery())
@@ -236,19 +237,14 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 processingTestState.setMessagesToDelete(messagesToDelete);
             } else
                 send(sm);
+            InfoMessageHelper imh = new InfoMessageHelper();
+            editMessage(chatID, processingTestState.getTestsMessageId(), imh.getMessage(processingTestState), true);
         } else { //processing test result
             if (testType == TestType.article || testType == TestType.articleWriting) { //if article -> delete message with article
                 deleteMessage(chatID, processingTestState.getArticleMessageID());
             }
-            List<TestResult> results = rh.getResultsByAttemptCode(processingTestState);
-            int allQuestionsAmount = results.size();
-            int rightAnswers = 0;
-            for (TestResult nr : results) {
-                if (nr.isRight())
-                    rightAnswers++;
-            }
-            String text = "Completed! Test code: "+ processingTestState.getTestCode() +"\nAll questions: " + allQuestionsAmount + ". Right answers: " + rightAnswers + ".";
-            editMessage(chatID, processingTestState.getTestsMessageId(), text);
+            InfoMessageHelper imh = new InfoMessageHelper();
+            editMessage(chatID, processingTestState.getTestsMessageId(), imh.getMessage(processingTestState), true);
 
             //reset processing state
             processingStateMap.remove(userId);
@@ -277,10 +273,11 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         List<TestQuestion> test = SheetsUtil.getTest(category, testCode);
         //put user into current attempt of chosen test
         List<Integer> optionMessages = new ArrayList<>();
-        ProcessingTestState processingTestState = new ProcessingTestState(category, testCode, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0);
+        List<TestResult> testResults = new ArrayList<>();
+        ProcessingTestState processingTestState = new ProcessingTestState(category, testCode, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0, testResults);
         processingStateMap.put(userId, processingTestState);
-        //delete keyboard from the previous message
-        editMessage(update.getCallbackQuery().getMessage().getChatId(), testsMessageId, update.getCallbackQuery().getMessage().getText());
+        //edit previous message
+        InfoMessageHelper imh = new InfoMessageHelper();
         //save attempt into db
         ResultsHelper rh = new ResultsHelper();
         if (update.hasCallbackQuery())
@@ -335,11 +332,13 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private void editMessage(long chatId, int messageId, String text) {
+    private void editMessage(long chatId, int messageId, String text, boolean htmlParseMode) {
         EditMessageText editMessageText = new EditMessageText();
         editMessageText.setChatId(chatId);
         editMessageText.setMessageId(messageId);
         editMessageText.setText(text);
+        if (htmlParseMode)
+            editMessageText.setParseMode(ParseMode.HTML);
         try {
             execute(editMessageText);
         } catch (TelegramApiException e) {

@@ -14,6 +14,8 @@ public class ProcessingTestState {
     private List<Integer> messagesToDelete;
     private int articleMessageID;
 
+    private List<TestResult> results;
+
     public ProcessingTestState( String category,
                                 String testCode,
                                 Long userId,
@@ -22,7 +24,8 @@ public class ProcessingTestState {
                                 int currentQuestion,
                                 int testsMessageId,
                                 List<Integer> messagesToDelete,
-                                Integer articleMessageID) {
+                                Integer articleMessageID,
+                                List<TestResult> results) {
         this.category = category;
         this.testCode = testCode;
         this.userId = userId;
@@ -32,6 +35,7 @@ public class ProcessingTestState {
         this.testsMessageId = testsMessageId;
         this.messagesToDelete = messagesToDelete;
         this.articleMessageID = articleMessageID;
+        this.results = results;
     }
 
     public String getCategory() { return category; }
@@ -77,5 +81,13 @@ public class ProcessingTestState {
 
     public void setArticleMessageID(Integer articleMessageID) {
         this.articleMessageID = articleMessageID;
+    }
+
+    public List<TestResult> getResults() {
+        return results;
+    }
+
+    public void setResults(List<TestResult> results) {
+        this.results = results;
     }
 }
