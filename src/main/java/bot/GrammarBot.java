@@ -109,7 +109,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                         String category = parsedCallbackForCategories[SysConstants.NUMBER_OF_CATEGORY_TYPE_IN_CALLBACK];
                         choosingTestState.setCategory(category);
                         send(categoriesHelper.getSendTestsListMessage(choosingTestState.getCategory(), update, choosingTestState));
-                        sendAnswerCallbackQuery(update.getCallbackQuery().getId(), true);
+                        sendAnswerCallbackQuery(update.getCallbackQuery().getId());
                         deleteMessage(update.getCallbackQuery().getMessage().getChatId(), update.getCallbackQuery().getMessage().getMessageId());
                     } else if (choosingTestState.getTestName().equals("")) {
                         //save test and initiate new attempt
@@ -123,7 +123,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 } else {
                     //pressed button with tests while choosing test
                     sendMsg(update.getCallbackQuery().getMessage().getChatId(), ReplyConstants.MESSAGE_IS_OUTDATED);
-                    //ToDo delete this message
+                    deleteMessage(update.getCallbackQuery().getMessage().getChatId(), update.getCallbackQuery().getMessage().getMessageId());
                 }
         } else if (state == State.PROCESSING_TEST) {
             if (callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
@@ -140,6 +140,9 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             }
         } else if (state == State.FREE)
             sendMsg(update.getCallbackQuery().getMessage().getChatId(), ReplyConstants.USE_TESTS_COMMAND);
+        else
+            deleteMessage(update.getCallbackQuery().getMessage().getChatId(), update.getCallbackQuery().getMessage().getMessageId());
+            sendAnswerCallbackQuery(update.getCallbackQuery().getId());
     }
 
     private void processNextQuestion(Update update, String callbackType) {
@@ -194,7 +197,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
 
             //send answer to callbackQuery
             if (update.hasCallbackQuery())
-                sendAnswerCallbackQuery(callbackQueryID, isRight);
+                sendAnswerCallbackQuery(callbackQueryID);
 
             //delete previous question
             deleteMessage(chatID, currentMessageId);
@@ -288,14 +291,10 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         processNextQuestion(update, callbackType);
     }
 
-    private void sendAnswerCallbackQuery(String callbackQueryId, Boolean success) {
+    private void sendAnswerCallbackQuery(String callbackQueryId) {
         AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery();
         answerCallbackQuery.setCallbackQueryId(callbackQueryId);
         answerCallbackQuery.setShowAlert(false);
-        if (success)
-            answerCallbackQuery.setText(SysConstants.SUCCESS_EMOJI);
-        else
-            answerCallbackQuery.setText(SysConstants.WRONG_EMOJI);
         try {
             execute(answerCallbackQuery);
         } catch (TelegramApiException e) {
