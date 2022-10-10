@@ -63,13 +63,20 @@ public class ResultsHelper {
         String article = testQuestion.getArticle();
         SimpleDateFormat formatter = new SimpleDateFormat(DatabaseHelper.pattern);
         String createdDate = formatter.format(new Date());
+        String correctAnswer = "";
 
         String options = "";
-        if (type == TestType.normal || type == TestType.article)
+        if (type == TestType.normal || type == TestType.article) {
             options = getOptionsAsString(testQuestion.getOptions());
+            correctAnswer = testQuestion.getAnswer().toString();
+        } else {
+            correctAnswer = testQuestion.getAnswerWriting();
+        }
 
-        String insertQuery = String.format("insert into results (id, attempt_id, type, article, question, is_right, answer, answer_writing, options, create_date) VALUES ('%s', '%s', '%s', '%s', '%s', %s, '%s', '%s', '%s', '%s');",
-                id, attemptId, type.name(), normalizeString(article), normalizeString(question), isRight, currentAnswer, currentAnswer, options, createdDate);
+
+
+        String insertQuery = String.format("insert into results (id, attempt_id, type, article, question, is_right, answer, answer_writing, correct_answer, options, create_date) VALUES ('%s', '%s', '%s', '%s', '%s', %s, '%s', '%s', '%s', '%s', '%s');",
+                id, attemptId, type.name(), normalizeString(article), normalizeString(question), isRight, currentAnswer, currentAnswer, correctAnswer, options, createdDate);
 
         DatabaseHelper dbHelper = new DatabaseHelper();
         try {
@@ -83,7 +90,7 @@ public class ResultsHelper {
 
     public List<TestResult> getResultsByAttemptCode(ProcessingTestState processingTestState) {
         String attemptId = findAttemptIdByAttemptCode(processingTestState);
-        String selectQuery = String.format("select type, article, question, options, answer, is_right from public.results where attempt_id  = '%s' order by create_date;", attemptId);
+        String selectQuery = String.format("select type, article, question, options, answer, correct_answer, is_right from public.results where attempt_id  = '%s' order by create_date;", attemptId);
 
         DatabaseHelper dbHelper = new DatabaseHelper();
         TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
@@ -102,8 +109,10 @@ public class ResultsHelper {
                         optionMap.put(testQuestionMapper.mapOption(parsedOptions[0]), parsedOptions[1]);
                     }
                     answer = testQuestionMapper.mapOption(st.getString(3));
+                } else {
+
                 }
-                result.add(new TestResult(testType, st.getString(2), st.getString(3), optionMap, answer, st.getString(5), st.getObject(6, Boolean.class)));
+                result.add(new TestResult(testType, st.getString(2), st.getString(3), optionMap, answer, st.getString(6), st.getObject(7, Boolean.class)));
             }
         } catch (SQLException e) {
             e.printStackTrace();
