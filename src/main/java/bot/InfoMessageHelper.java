@@ -42,7 +42,13 @@ public class InfoMessageHelper {
         String testTask = processingTestState.getTest().get(0).getTask();
 
         StringBuilder sb = new StringBuilder(s);
-        return sb.append("<b>").append(normalizeInt(currentQuestionNumber)).append("/").append(amountOfQuestions).append(".</b> ").append(testTask).toString();
+        String result = sb.append("<b>").append(normalizeInt(currentQuestionNumber)).append("/").append(amountOfQuestions).append(".</b> ").append(testTask).toString();
+
+        if (processingTestState.getTest().get(0).getTestType() == TestType.normalWriting || processingTestState.getTest().get(0).getTestType() == TestType.articleWriting) {
+            StringBuilder sbuilder = new StringBuilder(result);
+            result = sbuilder.append("\n<b>If a question has more than one gap please use \"-\" between the answers. Send please all answers in one message.</b>").toString();
+        }
+        return result;
     }
 
     private String getPreviousQuestionResults(String s, ProcessingTestState processingTestState) {
@@ -56,7 +62,7 @@ public class InfoMessageHelper {
             answer = processingTestState.getTest().get(currentQuestionNumber - 1).getOptions().get(processingTestState.getTest().get(currentQuestionNumber - 1).getAnswer());
         } else {
             userAnswer = processingTestState.getResults().get(currentQuestionNumber - 1).getAnswerWriting();
-            answer = processingTestState.getTest().get(currentQuestionNumber - 1).getAnswerWriting();
+            answer = processingTestState.getTest().get(currentQuestionNumber - 1).getAnswerWriting().replace("#", "<b>or</b>");
         }
 
         StringBuilder sb = new StringBuilder(s);

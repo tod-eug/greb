@@ -68,10 +68,10 @@ public class EvaluateAnswerHelper {
         //save answer into the state
         List<TestQuestion> test = processingTestState.getTest();
         List<TestResult> results = processingTestState.getResults();
-        results.add(new TestResult(test.get(0).getTestType(), test.get(0).getArticle(), test.get(processingTestState.getCurrentQuestion()).getQuestion(),
-                test.get(processingTestState.getCurrentQuestion()).getOptions(), Option.A, userMessage, isRight));
+        results.add(new TestResult(test.get(0).getTestType(), test.get(0).getArticle(), test.get(processingTestState.getCurrentQuestion() - 1).getQuestion(),
+                test.get(processingTestState.getCurrentQuestion() - 1).getOptions(), Option.A, userMessage, isRight));
         processingTestState.setResults(results);
-        GrammarBot.processingStateMap.put(update.getCallbackQuery().getFrom().getId(), processingTestState);
+        GrammarBot.processingStateMap.put(update.getMessage().getFrom().getId(), processingTestState);
 
         return isRight;
     }
