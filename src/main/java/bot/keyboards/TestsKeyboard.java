@@ -24,7 +24,7 @@ public class TestsKeyboard {
                     List<InlineKeyboardButton> rowInline = new ArrayList<>();
                     for (Test s: l) {
                         InlineKeyboardButton button = new InlineKeyboardButton();
-                        button.setText(s.getCode());
+                        button.setText(s.getName());
                         button.setCallbackData(SysConstants.TESTS_CALLBACK_TYPE + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
                                 user.getId() + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
                                 s.getCode() + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +

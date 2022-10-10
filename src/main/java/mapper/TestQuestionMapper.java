@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class TestQuestionMapper {
 
-    public TestQuestion mapQuestion(String testType, String article, String question, String answer, String answerWriting, Map<String, String> options) {
+    public TestQuestion mapQuestion(String testType, String name, String task, String article, String question, String answer, String answerWriting, Map<String, String> options) {
         Option answerOption = mapOption(answer);
         Map<Option, String> optionsOption = new HashMap<>();
         TestType type = mapTestType(testType);
@@ -20,7 +20,7 @@ public class TestQuestionMapper {
             Option keyOption = mapOption(key);
             optionsOption.put(keyOption, options.get(key));
         }
-        return new TestQuestion(type, article, question, optionsOption, answerOption, answerWriting);
+        return new TestQuestion(type, name, task, article, question, optionsOption, answerOption, answerWriting);
     }
 
     public TestType mapTestType(String text) {

@@ -1,5 +1,6 @@
-package bot;
+package bot.helpers;
 
+import bot.ReplyConstants;
 import bot.keyboards.TestsKeyboard;
 import dto.ChoosingTestState;
 import dto.Test;
@@ -17,7 +18,7 @@ public class CategoriesHelper {
         String testsList = "";
         if (!tests.isEmpty()) {
             for (Test s : tests) {
-                testsList = testsList + s.getCode() + " - " + s.getName() + "\n";
+                testsList = testsList + s.getName() + "\n";
             }
         }
 

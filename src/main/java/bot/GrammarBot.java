@@ -5,6 +5,9 @@ import bot.command.StartCommand;
 import bot.command.TestsCommand;
 import bot.enums.State;
 import bot.enums.TestType;
+import bot.helpers.CategoriesHelper;
+import bot.helpers.EvaluateAnswerHelper;
+import bot.helpers.InfoMessageHelper;
 import db.ResultsHelper;
 import dto.*;
 import bot.keyboards.OptionsKeyboard;
@@ -109,12 +112,12 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                         String category = parsedCallbackForCategories[SysConstants.NUMBER_OF_CATEGORY_TYPE_IN_CALLBACK];
                         choosingTestState.setCategory(category);
                         send(categoriesHelper.getSendTestsListMessage(choosingTestState.getCategory(), update, choosingTestState));
-                        sendAnswerCallbackQuery(update.getCallbackQuery().getId(), true);
+                        sendAnswerCallbackQuery(update.getCallbackQuery().getId());
                         deleteMessage(update.getCallbackQuery().getMessage().getChatId(), update.getCallbackQuery().getMessage().getMessageId());
                     } else if (choosingTestState.getTestName().equals("")) {
                         //save test and initiate new attempt
                         String testCode = parsedCallbackForTests[SysConstants.NUMBER_OF_TEST_TYPE_IN_CALLBACK];
-                        initiateNewTestAttempt(update, testCode, userId, callbackType);
+                        initiateNewTestAttempt(update, choosingTestState.getCategory(), testCode, userId, callbackType);
                         stateMap.put(userId, State.PROCESSING_TEST);
                     } else {
                         processNextQuestion(update, callbackType);
@@ -123,7 +126,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 } else {
                     //pressed button with tests while choosing test
                     sendMsg(update.getCallbackQuery().getMessage().getChatId(), ReplyConstants.MESSAGE_IS_OUTDATED);
-                    //ToDo delete this message
+                    deleteMessage(update.getCallbackQuery().getMessage().getChatId(), update.getCallbackQuery().getMessage().getMessageId());
                 }
         } else if (state == State.PROCESSING_TEST) {
             if (callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
@@ -131,7 +134,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                     processNextQuestion(update, callbackType);
                 } else {
                     String testCode = parsedCallbackForTests[SysConstants.NUMBER_OF_TEST_TYPE_IN_CALLBACK];
-                    initiateNewTestAttempt(update, testCode, userId, callbackType);
+                    initiateNewTestAttempt(update, processingStateMap.get(userId).getCategory(), testCode, userId, callbackType);
                 }
             } else {
                 //pressed button with category while doing the test
@@ -140,6 +143,9 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             }
         } else if (state == State.FREE)
             sendMsg(update.getCallbackQuery().getMessage().getChatId(), ReplyConstants.USE_TESTS_COMMAND);
+        else
+            deleteMessage(update.getCallbackQuery().getMessage().getChatId(), update.getCallbackQuery().getMessage().getMessageId());
+            sendAnswerCallbackQuery(update.getCallbackQuery().getId());
     }
 
     private void processNextQuestion(Update update, String callbackType) {
@@ -190,10 +196,11 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 }
                 isRight = evaluateAnswerHelper.evaluateWrittenAnswer(update, processingTestState, userMessage);
             }
+            processingTestState = processingStateMap.get(userId);
 
             //send answer to callbackQuery
             if (update.hasCallbackQuery())
-                sendAnswerCallbackQuery(callbackQueryID, isRight);
+                sendAnswerCallbackQuery(callbackQueryID);
 
             //delete previous question
             deleteMessage(chatID, currentMessageId);
@@ -236,19 +243,14 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 processingTestState.setMessagesToDelete(messagesToDelete);
             } else
                 send(sm);
+            InfoMessageHelper imh = new InfoMessageHelper();
+            editMessage(chatID, processingTestState.getTestsMessageId(), imh.getMessage(processingTestState), true);
         } else { //processing test result
             if (testType == TestType.article || testType == TestType.articleWriting) { //if article -> delete message with article
                 deleteMessage(chatID, processingTestState.getArticleMessageID());
             }
-            List<TestResult> results = rh.getResultsByAttemptCode(processingTestState);
-            int allQuestionsAmount = results.size();
-            int rightAnswers = 0;
-            for (TestResult nr : results) {
-                if (nr.isRight())
-                    rightAnswers++;
-            }
-            String text = "Completed! Test code: "+ processingTestState.getTestCode() +"\nAll questions: " + allQuestionsAmount + ". Right answers: " + rightAnswers + ".";
-            editMessage(chatID, processingTestState.getTestsMessageId(), text);
+            InfoMessageHelper imh = new InfoMessageHelper();
+            editMessage(chatID, processingTestState.getTestsMessageId(), imh.getMessage(processingTestState), true);
 
             //reset processing state
             processingStateMap.remove(userId);
@@ -267,21 +269,21 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private void initiateNewTestAttempt(Update update, String testCode, Long userId, String callbackType) {
+    private void initiateNewTestAttempt(Update update, String category, String testCode, Long userId, String callbackType) {
         choosingStateMap.remove(userId);
 
         String attemptCode = update.getCallbackQuery().getData();
         int testsMessageId = update.getCallbackQuery().getMessage().getMessageId();
 
         //get Test by testCode
-        SheetsUtil sheetsUtil = new SheetsUtil();
-        List<TestQuestion> test = sheetsUtil.getTest(testCode);
+        List<TestQuestion> test = SheetsUtil.getTest(category, testCode);
         //put user into current attempt of chosen test
         List<Integer> optionMessages = new ArrayList<>();
-        ProcessingTestState processingTestState = new ProcessingTestState(testCode, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0);
+        List<TestResult> testResults = new ArrayList<>();
+        ProcessingTestState processingTestState = new ProcessingTestState(category, testCode, userId, test, attemptCode, 0, testsMessageId, optionMessages, 0, testResults);
         processingStateMap.put(userId, processingTestState);
-        //delete keyboard from the previous message
-        editMessage(update.getCallbackQuery().getMessage().getChatId(), testsMessageId, update.getCallbackQuery().getMessage().getText());
+        //edit previous message
+        InfoMessageHelper imh = new InfoMessageHelper();
         //save attempt into db
         ResultsHelper rh = new ResultsHelper();
         if (update.hasCallbackQuery())
@@ -292,14 +294,10 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         processNextQuestion(update, callbackType);
     }
 
-    private void sendAnswerCallbackQuery(String callbackQueryId, Boolean success) {
+    private void sendAnswerCallbackQuery(String callbackQueryId) {
         AnswerCallbackQuery answerCallbackQuery = new AnswerCallbackQuery();
         answerCallbackQuery.setCallbackQueryId(callbackQueryId);
         answerCallbackQuery.setShowAlert(false);
-        if (success)
-            answerCallbackQuery.setText(SysConstants.SUCCESS_EMOJI);
-        else
-            answerCallbackQuery.setText(SysConstants.WRONG_EMOJI);
         try {
             execute(answerCallbackQuery);
         } catch (TelegramApiException e) {
@@ -336,11 +334,13 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         }
     }
 
-    private void editMessage(long chatId, int messageId, String text) {
+    private void editMessage(long chatId, int messageId, String text, boolean htmlParseMode) {
         EditMessageText editMessageText = new EditMessageText();
         editMessageText.setChatId(chatId);
         editMessageText.setMessageId(messageId);
         editMessageText.setText(text);
+        if (htmlParseMode)
+            editMessageText.setParseMode(ParseMode.HTML);
         try {
             execute(editMessageText);
         } catch (TelegramApiException e) {

@@ -30,8 +30,7 @@ public class TestsCommand implements IBotCommand {
     @Override
     public void processMessage(AbsSender absSender, Message message, String[] arguments) {
 
-        SheetsUtil sheetsUtil = new SheetsUtil();
-        Map<String, List<Test>> categories =  sheetsUtil.getTestCategories();
+        Map<String, List<Test>> categories =  SheetsUtil.getTests();
         String categoriesList = "";
         Set<String> set = categories.keySet();
         if (!set.isEmpty()) {
