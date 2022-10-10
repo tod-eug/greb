@@ -1,5 +1,6 @@
-package bot;
+package bot.helpers;
 
+import bot.ReplyConstants;
 import bot.keyboards.TestsKeyboard;
 import dto.ChoosingTestState;
 import dto.Test;

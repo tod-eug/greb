@@ -1,5 +1,7 @@
-package bot;
+package bot.helpers;
 
+import bot.GrammarBot;
+import bot.SysConstants;
 import bot.enums.Option;
 import dto.ProcessingTestState;
 import dto.TestQuestion;

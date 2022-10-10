@@ -1,4 +1,4 @@
-package bot;
+package bot.helpers;
 
 import bot.enums.TestType;
 import dto.ProcessingTestState;
