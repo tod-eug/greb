@@ -1,68 +1,68 @@
 package bot.helpers;
 
 import bot.enums.TestType;
-import dto.ProcessingTestState;
 import dto.TestResult;
+import dto.TestState;
 
 import java.util.List;
 
 public class InfoMessageHelper {
 
-    public String getMessage(ProcessingTestState processingTestState) {
-        int currentQuestionNumber = processingTestState.getCurrentQuestion();
-        int amountOfQuestions = processingTestState.getTest().size();
+    public String getMessage(TestState ts) {
+        int currentQuestionNumber = ts.getCurrentQuestion();
+        int amountOfQuestions = ts.getTest().size();
         boolean firstQuestion = currentQuestionNumber == 0;
         boolean lastQuestion = currentQuestionNumber == amountOfQuestions;
 
         String result = "";
 
         if (lastQuestion) {
-            result = getPreviousQuestionResults(result, processingTestState);
-            result = getOverallResults(result, processingTestState);
+            result = getPreviousQuestionResults(result, ts);
+            result = getOverallResults(result, ts);
         } else {
             if (!firstQuestion) {
-                result = getPreviousQuestionResults(result, processingTestState);
+                result = getPreviousQuestionResults(result, ts);
             }
-            result = getTestNameLine(result, processingTestState);
-            result = getNextQuestionLine(result, processingTestState, currentQuestionNumber, amountOfQuestions);
+            result = getTestNameLine(result, ts);
+            result = getNextQuestionLine(result, ts, currentQuestionNumber, amountOfQuestions);
         }
         return result;
     }
 
 
-    private String getTestNameLine(String s, ProcessingTestState processingTestState) {
-        String category = processingTestState.getCategory();
-        String testName = processingTestState.getTest().get(0).getName();
+    private String getTestNameLine(String s, TestState ts) {
+        String category = ts.getCategory();
+        String testName = ts.getTest().get(0).getName();
 
         StringBuilder sb = new StringBuilder(s);
         return sb.append("<b>").append(category).append(".</b> <b>").append(testName).append("</b>\n").toString();
     }
 
-    private String getNextQuestionLine(String s, ProcessingTestState processingTestState, int currentQuestionNumber, int amountOfQuestions) {
-        String testTask = processingTestState.getTest().get(0).getTask();
+    private String getNextQuestionLine(String s, TestState ts, int currentQuestionNumber, int amountOfQuestions) {
+        String testTask = ts.getTest().get(0).getTask();
 
         StringBuilder sb = new StringBuilder(s);
         String result = sb.append("<b>").append(normalizeInt(currentQuestionNumber)).append("/").append(amountOfQuestions).append(".</b> ").append(testTask).toString();
 
-        if (processingTestState.getTest().get(0).getTestType() == TestType.normalWriting || processingTestState.getTest().get(0).getTestType() == TestType.articleWriting) {
+        if (ts.getTest().get(0).getTestType() == TestType.normalWriting || ts.getTest().get(0).getTestType() == TestType.articleWriting) {
             StringBuilder sbuilder = new StringBuilder(result);
             result = sbuilder.append("\n<b>If a question has more than one gap please use \"-\" between the answers. Send please all answers in one message.</b>").toString();
         }
         return result;
     }
 
-    private String getPreviousQuestionResults(String s, ProcessingTestState processingTestState) {
-        int currentQuestionNumber = processingTestState.getCurrentQuestion();
-        boolean isRight = processingTestState.getResults().get(currentQuestionNumber - 1).isRight();
-        String previousQuestion = processingTestState.getTest().get(currentQuestionNumber - 1).getQuestion();
+    private String getPreviousQuestionResults(String s, TestState ts) {
+        int currentQuestionNumber = ts.getCurrentQuestion();
+        boolean isRight = ts.getResults().get(currentQuestionNumber - 1).isRight();
+        String previousQuestion = ts.getTest().get(currentQuestionNumber - 1).getQuestion();
         String userAnswer = "";
         String answer = "";
-        if (processingTestState.getTest().get(0).getTestType() == TestType.normal || processingTestState.getTest().get(0).getTestType() == TestType.article) {
-            userAnswer = processingTestState.getTest().get(currentQuestionNumber - 1).getOptions().get(processingTestState.getResults().get(currentQuestionNumber - 1).getAnswer());
-            answer = processingTestState.getTest().get(currentQuestionNumber - 1).getOptions().get(processingTestState.getTest().get(currentQuestionNumber - 1).getAnswer());
+        if (ts.getTest().get(0).getTestType() == TestType.normal || ts.getTest().get(0).getTestType() == TestType.article) {
+            userAnswer = ts.getTest().get(currentQuestionNumber - 1).getOptions().get(ts.getResults().get(currentQuestionNumber - 1).getAnswer());
+            answer = ts.getTest().get(currentQuestionNumber - 1).getOptions().get(ts.getTest().get(currentQuestionNumber - 1).getAnswer());
         } else {
-            userAnswer = processingTestState.getResults().get(currentQuestionNumber - 1).getAnswerWriting();
-            answer = processingTestState.getTest().get(currentQuestionNumber - 1).getAnswerWriting().replace("#", "<b>or</b>");
+            userAnswer = ts.getResults().get(currentQuestionNumber - 1).getAnswerWriting();
+            answer = ts.getTest().get(currentQuestionNumber - 1).getAnswerWriting().replace("#", "<b>or</b>");
         }
 
         StringBuilder sb = new StringBuilder(s);
@@ -79,8 +79,8 @@ public class InfoMessageHelper {
         return result;
     }
 
-    private String getOverallResults(String s, ProcessingTestState processingTestState) {
-        List<TestResult> results = processingTestState.getResults();
+    private String getOverallResults(String s, TestState ts) {
+        List<TestResult> results = ts.getResults();
         int allQuestionsAmount = results.size();
         int rightAnswers = 0;
         for (TestResult nr : results) {

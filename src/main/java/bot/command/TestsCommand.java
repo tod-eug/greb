@@ -1,10 +1,6 @@
 package bot.command;
 
-import bot.GrammarBot;
 import bot.ReplyConstants;
-import bot.enums.State;
-import bot.keyboards.CategoriesKeyboard;
-import dto.ChoosingTestState;
 import dto.Test;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -43,12 +39,6 @@ public class TestsCommand implements IBotCommand {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(message.getChatId());
         sendMessage.setText(ReplyConstants.TESTS_COMMAND + categoriesList);
-        sendMessage.setReplyMarkup(CategoriesKeyboard.getCategoriesKeyboard(set, message.getFrom()));
         mp.sendMsg(absSender, sendMessage);
-
-        ChoosingTestState choosingTestState = new ChoosingTestState();
-        choosingTestState.setCategories(categories);
-        GrammarBot.choosingStateMap.put(message.getFrom().getId(), choosingTestState);
-        GrammarBot.stateMap.put(message.getFrom().getId(), State.CHOOSING_TEST);
     }
 }

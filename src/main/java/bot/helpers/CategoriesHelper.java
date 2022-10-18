@@ -2,18 +2,14 @@ package bot.helpers;
 
 import bot.ReplyConstants;
 import bot.keyboards.TestsKeyboard;
-import dto.ChoosingTestState;
 import dto.Test;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 
 import java.util.List;
 
 public class CategoriesHelper {
 
-    public SendMessage getSendTestsListMessage(String category, Update update, ChoosingTestState choosingTestState) {
-
-        List<Test> tests = choosingTestState.getCategories().get(category);
+    public EditMessageText getSendTestsListMessage(Long chatId, Long userId, int messageId, List<Test> tests) {
 
         String testsList = "";
         if (!tests.isEmpty()) {
@@ -22,10 +18,11 @@ public class CategoriesHelper {
             }
         }
 
-        SendMessage sm = new SendMessage();
-        sm.setChatId(update.getCallbackQuery().getMessage().getChatId());
-        sm.setText(ReplyConstants.LIST_OF_TESTS_IN_CATEGORY + testsList);
-        sm.setReplyMarkup(TestsKeyboard.getTestsKeyboard(tests, update.getCallbackQuery().getMessage().getFrom()));
-        return sm;
+        EditMessageText em = new EditMessageText();
+        em.setMessageId(messageId);
+        em.setChatId(chatId);
+        em.setText(ReplyConstants.LIST_OF_TESTS_IN_CATEGORY + testsList);
+        em.setReplyMarkup(TestsKeyboard.getTestsKeyboard(tests, userId));
+        return em;
     }
 }

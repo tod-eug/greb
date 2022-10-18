@@ -2,9 +2,9 @@ package db;
 
 import bot.enums.Option;
 import bot.enums.TestType;
-import dto.ProcessingTestState;
 import dto.TestQuestion;
 import dto.TestResult;
+import dto.TestState;
 import mapper.TestQuestionMapper;
 import org.telegram.telegrambots.meta.api.objects.User;
 
@@ -15,15 +15,15 @@ import java.util.*;
 
 public class ResultsHelper {
 
-    public void createAttempt(ProcessingTestState processingTestState, User user, String chatId) {
+    public void createAttempt(TestState ts, User user, String chatId) {
         UUID id = UUID.randomUUID();
         SimpleDateFormat formatter = new SimpleDateFormat(DatabaseHelper.pattern);
         String createdDate = formatter.format(new Date());
         UsersHelper uh = new UsersHelper();
-        String userId = uh.findUserByTgId(processingTestState.getUserId().toString(), user, chatId);
+        String userId = uh.findUserByTgId(ts.getUserId().toString(), user, chatId);
 
         String insertQuery = String.format("insert into attempt (id, user_id, test_code, attempt_code, create_date) VALUES ('%s', '%s', '%s', '%s', '%s');",
-                id, userId, processingTestState.getTestCode(), processingTestState.getAttemptCode(), createdDate);
+                id, userId, ts.getTestCode(), ts.getAttemptCode(), createdDate);
 
         DatabaseHelper dbHelper = new DatabaseHelper();
         try {
@@ -35,8 +35,8 @@ public class ResultsHelper {
         }
     }
 
-    public String findAttemptIdByAttemptCode(ProcessingTestState processingTestState) {
-        String selectQuery = String.format("select id from public.attempt a where attempt_code = '%s';", processingTestState.getAttemptCode());
+    public String findAttemptIdByAttemptCode(TestState ts) {
+        String selectQuery = String.format("select id from public.attempt a where attempt_code = '%s';", ts.getAttemptCode());
 
         DatabaseHelper dbHelper = new DatabaseHelper();
         String id = "";
@@ -53,10 +53,10 @@ public class ResultsHelper {
         return id;
     }
 
-    public void createResult(ProcessingTestState processingTestState, String currentAnswer, boolean isRight) {
-        TestQuestion testQuestion = processingTestState.getTest().get(processingTestState.getCurrentQuestion() - 1);
+    public void createResult(TestState ts, String currentAnswer, boolean isRight) {
+        TestQuestion testQuestion = ts.getTest().get(ts.getCurrentQuestion() - 1);
 
-        String attemptId = findAttemptIdByAttemptCode(processingTestState);
+        String attemptId = findAttemptIdByAttemptCode(ts);
         UUID id = UUID.randomUUID();
         String question = testQuestion.getQuestion();
         TestType type = testQuestion.getTestType();
@@ -88,8 +88,8 @@ public class ResultsHelper {
         }
     }
 
-    public List<TestResult> getResultsByAttemptCode(ProcessingTestState processingTestState) {
-        String attemptId = findAttemptIdByAttemptCode(processingTestState);
+    public List<TestResult> getResultsByAttemptCode(TestState ts) {
+        String attemptId = findAttemptIdByAttemptCode(ts);
         String selectQuery = String.format("select type, article, question, options, answer, correct_answer, is_right from public.results where attempt_id  = '%s' order by create_date;", attemptId);
 
         DatabaseHelper dbHelper = new DatabaseHelper();

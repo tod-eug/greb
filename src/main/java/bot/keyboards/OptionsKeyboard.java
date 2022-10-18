@@ -2,7 +2,6 @@ package bot.keyboards;
 
 import bot.SysConstants;
 import bot.enums.Option;
-import dto.ProcessingTestState;
 import org.apache.commons.collections4.ListUtils;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
@@ -12,9 +11,7 @@ import java.util.*;
 
 public class OptionsKeyboard {
 
-    public static ReplyKeyboard getOptionKeyboard(ProcessingTestState processingTestState) {
-        Map<Option, String> options = processingTestState.getTest().get(processingTestState.getCurrentQuestion()).getOptions();
-
+    public static ReplyKeyboard getOptionKeyboard(Map<Option, String> options, String attemptCode, int currentQuestion) {
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
 
@@ -52,8 +49,8 @@ public class OptionsKeyboard {
                         InlineKeyboardButton button = new InlineKeyboardButton();
                         button.setText(options.get(o));
                         button.setCallbackData(SysConstants.QUESTIONS_CALLBACK_TYPE + SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK +
-                                processingTestState.getAttemptCode() + SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK +
-                                processingTestState.getCurrentQuestion() + SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK +
+                                attemptCode + SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK +
+                                currentQuestion + SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK +
                                 o.name());
                         rowInline.add(button);
                     }
