@@ -118,7 +118,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                         ts.setCategory(category);
                         ts.setTestsMessageId(testMessageId);
                         ts.setTestChooseTimestamp(testChooseTimestamp);
-                        editMessage(categoriesHelper.getSendTestsListMessage(chatId, userId, testMessageId, ts.getCategories().get(category), testChooseTimestamp));
+                        editMessage(categoriesHelper.getSendTestsListMessage(chatId, userId, testMessageId, category, ts.getCategories().get(category), testChooseTimestamp));
                         sendAnswerCallbackQuery(update.getCallbackQuery().getId());
                     }
                 } else

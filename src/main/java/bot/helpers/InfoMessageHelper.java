@@ -87,9 +87,10 @@ public class InfoMessageHelper {
             if (nr.isRight())
                 rightAnswers++;
         }
+        String testName = ts.getTest().get(0).getName();
 
         StringBuilder sb = new StringBuilder(s);
-        return sb.append("❤ <b>Test is complete!</b>\n")
+        return sb.append("❤ <b>").append(testName).append("</b> from category <b>").append(ts.getCategory()).append("</b> is complete!\n")
                 .append("<b>All questions:</b> ").append(allQuestionsAmount).append(". <b>Right answers:</b> ").append(rightAnswers).append(".\n\n").toString();
     }
 
