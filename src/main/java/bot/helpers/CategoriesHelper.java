@@ -9,7 +9,7 @@ import java.util.List;
 
 public class CategoriesHelper {
 
-    public EditMessageText getSendTestsListMessage(Long chatId, Long userId, int messageId, List<Test> tests) {
+    public EditMessageText getSendTestsListMessage(Long chatId, Long userId, int messageId, List<Test> tests, String testChooseTimestamp) {
 
         String testsList = "";
         if (!tests.isEmpty()) {
@@ -22,7 +22,7 @@ public class CategoriesHelper {
         em.setMessageId(messageId);
         em.setChatId(chatId);
         em.setText(ReplyConstants.LIST_OF_TESTS_IN_CATEGORY + testsList);
-        em.setReplyMarkup(TestsKeyboard.getTestsKeyboard(tests, userId));
+        em.setReplyMarkup(TestsKeyboard.getTestsKeyboard(tests, userId, testChooseTimestamp));
         return em;
     }
 }

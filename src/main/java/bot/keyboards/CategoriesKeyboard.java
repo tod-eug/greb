@@ -12,7 +12,7 @@ import java.util.Set;
 
 public class CategoriesKeyboard {
 
-    public static ReplyKeyboard getCategoriesKeyboard(Set<String> categories, Long userId) {
+    public static ReplyKeyboard getCategoriesKeyboard(Set<String> categories, Long userId, String categoryChooseTimestamp) {
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<String> listFromSet = new ArrayList<>();
@@ -29,6 +29,7 @@ public class CategoriesKeyboard {
                         button.setCallbackData(SysConstants.CATEGORIES_CALLBACK_TYPE + SysConstants.DELIMITER_FOR_CATEGORIES_CALLBACK +
                                 userId + SysConstants.DELIMITER_FOR_CATEGORIES_CALLBACK +
                                 s + SysConstants.DELIMITER_FOR_CATEGORIES_CALLBACK +
+                                categoryChooseTimestamp + SysConstants.DELIMITER_FOR_CATEGORIES_CALLBACK +
                                 System.currentTimeMillis() / 1000);
                         rowInline.add(button);
                     }

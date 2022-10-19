@@ -88,6 +88,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
     private void processCallbackQuery(Update update) {
         Long userId = update.getCallbackQuery().getFrom().getId();
         Long chatId = update.getCallbackQuery().getMessage().getChatId();
+        int messageId = update.getCallbackQuery().getMessage().getMessageId();
 
         //callback type checking logic
         String[] parsedCallbackForCategories = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_CATEGORIES_CALLBACK);
@@ -101,36 +102,54 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         else if (parsedCallbackForQuestion[SysConstants.NUMBER_OF_CALLBACK_TYPE_IN_CALLBACK].equals(SysConstants.QUESTIONS_CALLBACK_TYPE))
             callbackType = SysConstants.QUESTIONS_CALLBACK_TYPE;
         TestState ts = stateMap.get(userId);
-        if (ts == null) {}
-            //ToDo create new TestState
-
-        if (callbackType.equals(SysConstants.CATEGORIES_CALLBACK_TYPE)) {
-            if (ts.getCategory().equals("")) {
-                //save category
-                CategoriesHelper categoriesHelper = new CategoriesHelper();
-                String category = parsedCallbackForCategories[SysConstants.NUMBER_OF_CATEGORY_TYPE_IN_CALLBACK];
-                int testMessageId = ts.getTestsMessageId();
-                ts.setCategory(category);
-                ts.setTestsMessageId(testMessageId);
-                editMessage(categoriesHelper.getSendTestsListMessage(chatId, userId, testMessageId, ts.getCategories().get(category)));
-                sendAnswerCallbackQuery(update.getCallbackQuery().getId());
-            }
-        } else if (callbackType.equals(SysConstants.TESTS_CALLBACK_TYPE)) {
-            if (ts.getTestName().equals("")) {
-                //save test and initiate new attempt
-                String testCode = parsedCallbackForTests[SysConstants.NUMBER_OF_TEST_TYPE_IN_CALLBACK];
-                initiateNewTestAttempt(update, ts.getCategory(), testCode, userId, callbackType);
-            }
-        } else if (callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
-            if (stateMap.containsKey(userId)) {
-                processNextQuestion(update, callbackType);
-            } else {
-                String testCode = parsedCallbackForTests[SysConstants.NUMBER_OF_TEST_TYPE_IN_CALLBACK];
-                initiateNewTestAttempt(update, stateMap.get(userId).getCategory(), testCode, userId, callbackType);
-            }
-        } else
-            //unknown callback
+        if (ts == null) {
+            //message is outdated
             deleteMessage(chatId, update.getCallbackQuery().getMessage().getMessageId());
+            initiateTestingProcess(userId, chatId);
+        } else {
+            if (callbackType.equals(SysConstants.CATEGORIES_CALLBACK_TYPE)) {
+                if (parsedCallbackForCategories[3].equals(ts.getCategoryChooseTimestamp())) {
+                    if (ts.getCategory().equals("")) {
+                        //save category
+                        CategoriesHelper categoriesHelper = new CategoriesHelper();
+                        String category = parsedCallbackForCategories[SysConstants.NUMBER_OF_CATEGORY_TYPE_IN_CALLBACK];
+                        int testMessageId = ts.getTestsMessageId();
+                        String testChooseTimestamp = parsedCallbackForCategories[3];
+                        ts.setCategory(category);
+                        ts.setTestsMessageId(testMessageId);
+                        ts.setTestChooseTimestamp(testChooseTimestamp);
+                        editMessage(categoriesHelper.getSendTestsListMessage(chatId, userId, testMessageId, ts.getCategories().get(category), testChooseTimestamp));
+                        sendAnswerCallbackQuery(update.getCallbackQuery().getId());
+                    }
+                } else
+                    //if callback from other category choose -> delete the message
+                    deleteMessage(chatId, messageId);
+            } else if (callbackType.equals(SysConstants.TESTS_CALLBACK_TYPE)) {
+                if (parsedCallbackForTests[3].equals(ts.getTestChooseTimestamp())) {
+                    if (ts.getTestCode().equals("")) {
+                        //save test and initiate new attempt
+                        String testCode = parsedCallbackForTests[SysConstants.NUMBER_OF_TEST_TYPE_IN_CALLBACK];
+                        initiateNewTestAttempt(update, ts.getCategory(), testCode, userId, callbackType);
+                    }
+                } else
+                    //if callback from other test choose -> delete the message
+                    deleteMessage(chatId, messageId);
+            } else if (callbackType.equals(SysConstants.QUESTIONS_CALLBACK_TYPE)) {
+                String attemptCode = parsedCallbackForQuestion[1];
+                if (stateMap.containsKey(userId)) {
+                    if (ts.getAttemptCode().equals(attemptCode))
+                        processNextQuestion(update, callbackType);
+                    else
+                        //if callback from other attempt -> delete the message
+                        deleteMessage(chatId, messageId);
+                } else {
+                    String testCode = parsedCallbackForTests[SysConstants.NUMBER_OF_TEST_TYPE_IN_CALLBACK];
+                    initiateNewTestAttempt(update, stateMap.get(userId).getCategory(), testCode, userId, callbackType);
+                }
+            } else
+                //unknown callback, lets delete the message just to be safe
+                deleteMessage(chatId, update.getCallbackQuery().getMessage().getMessageId());
+        }
     }
 
     private void processNextQuestion(Update update, String callbackType) {
@@ -283,6 +302,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
 
     private void initiateTestingProcess(Long userId, Long chatId) {
         Map<String, List<Test>> categories =  SheetsUtil.getTests();
+        TestState ts = new TestState(userId, categories);
 
         String categoriesList = "";
         Set<String> set = categories.keySet();
@@ -295,12 +315,10 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         SendMessage sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         sendMessage.setText(ReplyConstants.TESTS_COMMAND + categoriesList);
-        sendMessage.setReplyMarkup(CategoriesKeyboard.getCategoriesKeyboard(set, userId));
+        sendMessage.setReplyMarkup(CategoriesKeyboard.getCategoriesKeyboard(set, userId, ts.getCategoryChooseTimestamp()));
         int messageID = sendAndReturnMessageID(sendMessage);
 
-        TestState ts = new TestState(userId, categories);
         ts.setTestsMessageId(messageID);
-
         stateMap.put(userId, ts);
     }
 

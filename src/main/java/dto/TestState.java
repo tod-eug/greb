@@ -11,17 +11,21 @@ public class TestState {
     private String testName;
     private final Map<String, List<Test>> categories;
     private Test test;
-    private String attemptCode;
     private int currentQuestion;
     private int testsMessageId;
     private List<Integer> messagesToDelete;
     private int articleMessageID;
+    //codes for current testing attempt. Needed to separate old messages callback from current ones
+    private String categoryChooseTimestamp;
+    private String testChooseTimestamp;
+    private String attemptCode;
 
     private List<TestResult> results;
 
     public TestState(Long userId, Map<String, List<Test>> categories) {
         category = "";
-        testName = "";
+        testCode = "";
+        categoryChooseTimestamp = Long.toString(System.currentTimeMillis() / 1000);
         this.userId = userId;
         this.categories = categories;
     }
@@ -78,10 +82,6 @@ public class TestState {
         return test.getTestQuestion();
     }
 
-    public String getAttemptCode() {
-        return attemptCode;
-    }
-
     public void setCurrentQuestion(int currentQuestion) {
         this.currentQuestion = currentQuestion;
     }
@@ -116,5 +116,21 @@ public class TestState {
 
     public void setResults(List<TestResult> results) {
         this.results = results;
+    }
+
+    public String getCategoryChooseTimestamp() {
+        return categoryChooseTimestamp;
+    }
+
+    public String getTestChooseTimestamp() {
+        return testChooseTimestamp;
+    }
+
+    public void setTestChooseTimestamp(String testChooseTimestamp) {
+        this.testChooseTimestamp = testChooseTimestamp;
+    }
+
+    public String getAttemptCode() {
+        return attemptCode;
     }
 }

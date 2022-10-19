@@ -11,7 +11,7 @@ import java.util.List;
 
 public class TestsKeyboard {
 
-    public static InlineKeyboardMarkup getTestsKeyboard(List<Test> tests, Long userId) {
+    public static InlineKeyboardMarkup getTestsKeyboard(List<Test> tests, Long userId, String testChooseTimestamp) {
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
 
@@ -26,6 +26,7 @@ public class TestsKeyboard {
                         button.setCallbackData(SysConstants.TESTS_CALLBACK_TYPE + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
                                 userId + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
                                 s.getCode() + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
+                                testChooseTimestamp + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
                                 System.currentTimeMillis() / 1000);
                         rowInline.add(button);
                     }
