@@ -1,7 +1,7 @@
 package bot.command;
 
 import bot.GrammarBot;
-import bot.helpers.CategoriesMessageHelper;
+import bot.helpers.CategoriesHelper;
 import dto.Test;
 import dto.TestState;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
@@ -47,8 +47,8 @@ public class CancelCommand implements IBotCommand {
         Map<String, List<Test>> categories =  SheetsUtil.getTests();
         ts = new TestState(message.getFrom().getId(), categories);
 
-        CategoriesMessageHelper cmh = new CategoriesMessageHelper();
-        ts.setTestsMessageId(mp.sendAndReturnMessageID(absSender, cmh.initiateTestingProcess(message.getFrom().getId(), message.getChatId(), categories, ts.getCategoryChooseTimestamp())));
+        CategoriesHelper ch = new CategoriesHelper();
+        ts.setTestsMessageId(mp.sendAndReturnMessageID(absSender, ch.getInitialTestingProcessMessage(message.getFrom().getId(), message.getChatId(), categories, ts.getCategoryChooseTimestamp())));
         GrammarBot.stateMap.put(message.getFrom().getId(), ts);
     }
 }

@@ -1,8 +1,10 @@
 package bot.helpers;
 
 import bot.GrammarBot;
+import bot.ReplyConstants;
 import bot.SysConstants;
 import bot.enums.Option;
+import bot.enums.TestType;
 import dto.TestQuestion;
 import dto.TestResult;
 import dto.TestState;
@@ -15,7 +17,20 @@ import java.util.Map;
 
 public class EvaluateAnswerHelper {
 
-    public boolean evaluateOptionAnswer(Update update, TestState ts) {
+    public boolean evaluateAnswer(TestType testType, Update update, TestState ts) {
+        boolean isRight = false;
+        if (testType == TestType.normal || testType == TestType.article)
+            isRight = evaluateOptionAnswer(update, ts);
+        else if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
+            String userMessage = "";
+            if (update.hasMessage())
+                userMessage = update.getMessage().getText().toLowerCase().strip();
+            isRight = evaluateWrittenAnswer(update, ts, userMessage);
+        }
+        return isRight;
+    }
+
+    private boolean evaluateOptionAnswer(Update update, TestState ts) {
         TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
         String[] parsedCallbackForOptions = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK);
         Option currentAnswer = testQuestionMapper.mapOption(parsedCallbackForOptions[SysConstants.NUMBER_OF_RESULTS_IN_CALLBACK]);
@@ -33,7 +48,7 @@ public class EvaluateAnswerHelper {
         return isRight;
     }
 
-    public boolean evaluateWrittenAnswer(Update update, TestState ts, String userMessage) {
+    private boolean evaluateWrittenAnswer(Update update, TestState ts, String userMessage) {
         boolean isRight = false;
         String[] options = ts.getTest().get(ts.getCurrentQuestion() - 1)
                 .getAnswerWriting().split(SysConstants.DELIMITER_FOR_ALTERNATIVE_OPTIONS);
