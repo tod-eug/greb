@@ -1,11 +1,17 @@
 package bot.command;
 
 import bot.GrammarBot;
-import bot.ReplyConstants;
+import bot.helpers.CategoriesMessageHelper;
+import dto.Test;
+import dto.TestState;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
-import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.bots.AbsSender;
+import sheets.SheetsUtil;
+
+import java.util.List;
+import java.util.Map;
 
 public class CancelCommand implements IBotCommand {
     @Override
@@ -21,12 +27,28 @@ public class CancelCommand implements IBotCommand {
     @Override
     public void processMessage(AbsSender absSender, Message message, String[] arguments) {
         MessageProcessor mp = new MessageProcessor();
-        SendMessage sm = new SendMessage();
-        sm.setChatId(message.getChatId());
-        sm.setText(ReplyConstants.CANCEL_REPLY_RESET);
-        mp.sendMsg(absSender, sm);
-        //ToDo delete all messages from previous test/category choosing
+        TestState ts = GrammarBot.stateMap.get(message.getFrom().getId());
 
-        GrammarBot.stateMap.remove(message.getFrom().getId());
+        //delete previous tests message
+        DeleteMessage deleteTestMessage = new DeleteMessage();
+        deleteTestMessage.setChatId(message.getChatId());
+        deleteTestMessage.setMessageId(ts.getTestsMessageId());
+        mp.deleteMsg(absSender, deleteTestMessage);
+
+        //delete previous question message
+        if (ts.getQuestionMessageId() != 0) {
+            DeleteMessage deleteQuestionMessage = new DeleteMessage();
+            deleteQuestionMessage.setChatId(message.getChatId());
+            deleteQuestionMessage.setMessageId(ts.getQuestionMessageId());
+            mp.deleteMsg(absSender, deleteQuestionMessage);
+        }
+
+        // initiate new test attempt
+        Map<String, List<Test>> categories =  SheetsUtil.getTests();
+        ts = new TestState(message.getFrom().getId(), categories);
+
+        CategoriesMessageHelper cmh = new CategoriesMessageHelper();
+        ts.setTestsMessageId(mp.sendAndReturnMessageID(absSender, cmh.initiateTestingProcess(message.getFrom().getId(), message.getChatId(), categories, ts.getCategoryChooseTimestamp())));
+        GrammarBot.stateMap.put(message.getFrom().getId(), ts);
     }
 }

@@ -5,6 +5,7 @@ import bot.command.StartCommand;
 import bot.command.TestsCommand;
 import bot.enums.TestType;
 import bot.helpers.CategoriesHelper;
+import bot.helpers.CategoriesMessageHelper;
 import bot.helpers.EvaluateAnswerHelper;
 import bot.helpers.InfoMessageHelper;
 import bot.keyboards.CategoriesKeyboard;
@@ -250,7 +251,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 messagesToDelete.add(messageId);
                 ts.setMessagesToDelete(messagesToDelete);
             } else
-                send(sm);
+                ts.setQuestionMessageId(sendAndReturnMessageID(sm));
             InfoMessageHelper imh = new InfoMessageHelper();
             editMessage(chatID, ts.getTestsMessageId(), imh.getMessage(ts), true);
         } else { //processing test result
@@ -304,25 +305,12 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         processNextQuestion(update, callbackType);
     }
 
-    private void initiateTestingProcess(Long userId, Long chatId) {
+    public void initiateTestingProcess(Long userId, Long chatId) {
         Map<String, List<Test>> categories =  SheetsUtil.getTests();
         TestState ts = new TestState(userId, categories);
 
-        String categoriesList = "";
-        Set<String> set = categories.keySet();
-        if (!set.isEmpty()) {
-            for (String s : set) {
-                categoriesList = categoriesList + s + "\n";
-            }
-        }
-
-        SendMessage sendMessage = new SendMessage();
-        sendMessage.setChatId(chatId);
-        sendMessage.setText(ReplyConstants.TESTS_COMMAND + categoriesList);
-        sendMessage.setReplyMarkup(CategoriesKeyboard.getCategoriesKeyboard(set, userId, ts.getCategoryChooseTimestamp()));
-        int messageID = sendAndReturnMessageID(sendMessage);
-
-        ts.setTestsMessageId(messageID);
+        CategoriesMessageHelper cmh = new CategoriesMessageHelper();
+        ts.setTestsMessageId(sendAndReturnMessageID(cmh.initiateTestingProcess(userId, chatId, categories, ts.getCategoryChooseTimestamp())));
         stateMap.put(userId, ts);
     }
 

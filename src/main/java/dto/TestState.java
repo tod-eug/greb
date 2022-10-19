@@ -13,10 +13,11 @@ public class TestState {
     private Test test;
     private int currentQuestion;
     private int testsMessageId;
+    private int questionMessageId;
     private List<Integer> messagesToDelete;
     private int articleMessageID;
     //codes for current testing attempt. Needed to separate old messages callback from current ones
-    private String categoryChooseTimestamp;
+    private final String categoryChooseTimestamp;
     private String testChooseTimestamp;
     private String attemptCode;
 
@@ -26,6 +27,7 @@ public class TestState {
         category = "";
         testCode = "";
         categoryChooseTimestamp = Long.toString(System.currentTimeMillis() / 1000);
+        questionMessageId = 0;
         this.userId = userId;
         this.categories = categories;
     }
@@ -132,5 +134,13 @@ public class TestState {
 
     public String getAttemptCode() {
         return attemptCode;
+    }
+
+    public void setQuestionMessageId(int questionMessageId) {
+        this.questionMessageId = questionMessageId;
+    }
+
+    public int getQuestionMessageId() {
+        return questionMessageId;
     }
 }
