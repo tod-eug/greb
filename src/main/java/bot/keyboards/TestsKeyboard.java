@@ -32,6 +32,17 @@ public class TestsKeyboard {
                     }
                     rowsInline.add(rowInline);
                 }
+                List<InlineKeyboardButton> rowInline = new ArrayList<>();
+                InlineKeyboardButton button = new InlineKeyboardButton();
+                button.setText("<<");
+                button.setCallbackData(SysConstants.TESTS_CALLBACK_TYPE + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
+                        userId + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
+                        "Back" + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
+                        testChooseTimestamp + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
+                        SysConstants.GO_BACK + SysConstants.DELIMITER_FOR_TESTS_CALLBACK +
+                        System.currentTimeMillis() / 1000);
+                rowInline.add(button);
+                rowsInline.add(rowInline);
             }
         }
 
