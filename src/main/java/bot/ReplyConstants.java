@@ -4,7 +4,7 @@ public interface ReplyConstants {
     /**
      * Strings for commands replies
      */
-    String START_REPLY_WELCOME = "Welcome! ";
+    String START_REPLY_WELCOME = "Welcome! I can help you with training your English grammar!\nAll tests are split by category. Please choose the category to start!";
     String TESTS_COMMAND = "All tests are split by category. List of available categories: \n";
     String CANCEL_REPLY_RESET = "Cancelling current test.";
 

@@ -31,7 +31,6 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
     public GrammarBot() {
         super();
         register(new StartCommand());
-        register(new TestsCommand());
         register(new CancelCommand());
     }
     @Override
