@@ -30,6 +30,23 @@ public class CategoriesHelper {
         return sendMessage;
     }
 
+    public EditMessageText getInitialTestingProcessMessageEdit(Long userId, Long chatId, Map<String, List<Test>> categories, String categoryChooseTimestamp, int messageId) {
+        String categoriesList = "";
+        Set<String> set = categories.keySet();
+        if (!set.isEmpty()) {
+            for (String s : set) {
+                categoriesList = categoriesList + s + "\n";
+            }
+        }
+
+        EditMessageText editMessage = new EditMessageText();
+        editMessage.setMessageId(messageId);
+        editMessage.setChatId(chatId);
+        editMessage.setText(ReplyConstants.TESTS_COMMAND + categoriesList);
+        editMessage.setReplyMarkup(CategoriesKeyboard.getCategoriesKeyboard(set, userId, categoryChooseTimestamp));
+        return editMessage;
+    }
+
     public EditMessageText getSendTestsListMessage(Long chatId, Long userId, int messageId, String category, List<Test> tests, String testChooseTimestamp) {
 
         String testsList = "";

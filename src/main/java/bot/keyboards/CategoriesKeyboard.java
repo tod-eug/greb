@@ -12,7 +12,7 @@ import java.util.Set;
 
 public class CategoriesKeyboard {
 
-    public static ReplyKeyboard getCategoriesKeyboard(Set<String> categories, Long userId, String categoryChooseTimestamp) {
+    public static InlineKeyboardMarkup getCategoriesKeyboard(Set<String> categories, Long userId, String categoryChooseTimestamp) {
         InlineKeyboardMarkup keyboardMarkup = new InlineKeyboardMarkup();
         List<List<InlineKeyboardButton>> rowsInline = new ArrayList<>();
         List<String> listFromSet = new ArrayList<>();

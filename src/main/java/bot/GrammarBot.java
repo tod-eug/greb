@@ -125,8 +125,13 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             } else if (callbackType.equals(SysConstants.TESTS_CALLBACK_TYPE)) {
                 if (parsedCallbackForTests[3].equals(ts.getTestChooseTimestamp())) {
                     if (parsedCallbackForTests[4].equals(SysConstants.GO_BACK)) {
-                        deleteMessage(chatId, messageId);
-                        initiateTestingProcess(userId, chatId);
+                        Map<String, List<Test>> categories =  SheetsUtil.getTests();
+                        TestState newTs = new TestState(userId, categories);
+                        newTs.setTestsMessageId(ts.getTestsMessageId());
+
+                        CategoriesHelper ch = new CategoriesHelper();
+                        editMessage(ch.getInitialTestingProcessMessageEdit(userId, chatId, categories, newTs.getCategoryChooseTimestamp(), newTs.getTestsMessageId()));
+                        stateMap.put(userId, newTs);
                     }
                     if (ts.getTestCode().equals("")) {
                         //save test and initiate new attempt
