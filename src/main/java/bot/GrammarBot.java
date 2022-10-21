@@ -367,4 +367,34 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             e.printStackTrace();
         }
     }
+
+    private void executeMessages(Executable executable) {
+        if (executable.getDeleteMessages().size() > 0) {
+            for (DeleteMessage dm : executable.getDeleteMessages()) {
+                try {
+                    execute(dm);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        if (executable.getEditMessages().size() > 0) {
+            for (EditMessageText em : executable.getEditMessages()) {
+                try {
+                    execute(em);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        if (executable.getSendMessages().size() > 0) {
+            for (SendMessage sm : executable.getSendMessages()) {
+                try {
+                    execute(sm);
+                } catch (TelegramApiException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 }
