@@ -1,6 +1,7 @@
 package bot.command;
 
 import bot.GrammarBot;
+import bot.enums.TestType;
 import bot.helpers.CategoriesHelper;
 import dto.Test;
 import dto.TestState;
@@ -41,6 +42,15 @@ public class CancelCommand implements IBotCommand {
             deleteQuestionMessage.setChatId(message.getChatId());
             deleteQuestionMessage.setMessageId(ts.getQuestionMessageId());
             mp.deleteMsg(absSender, deleteQuestionMessage);
+        }
+
+        //delete previous article message if applicable
+        TestType testType = ts.getTest().get(0).getTestType();
+        if (testType == TestType.article || testType == TestType.articleWriting) {
+            DeleteMessage deleteMessage = new DeleteMessage();
+            deleteMessage.setChatId(message.getChatId());
+            deleteMessage.setMessageId(ts.getArticleMessageID());
+            mp.deleteMsg(absSender, deleteMessage);
         }
 
         // initiate new test attempt
