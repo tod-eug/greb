@@ -26,6 +26,7 @@ public class TestState {
         category = "";
         testCode = "";
         categoryChooseTimestamp = Long.toString(System.currentTimeMillis() / 1000);
+        testsMessageId = 0;
         questionMessageId = 0;
         this.userId = userId;
         this.categories = categories;
@@ -78,7 +79,9 @@ public class TestState {
     }
 
     public List<TestQuestion> getTest() {
-        return test.getTestQuestion();
+        if (test != null)
+            return test.getTestQuestion();
+        return null;
     }
 
     public void setCurrentQuestion(int currentQuestion) {

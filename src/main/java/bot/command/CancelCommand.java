@@ -30,27 +30,34 @@ public class CancelCommand implements IBotCommand {
         MessageProcessor mp = new MessageProcessor();
         TestState ts = GrammarBot.stateMap.get(message.getFrom().getId());
 
-        //delete previous tests message
-        DeleteMessage deleteTestMessage = new DeleteMessage();
-        deleteTestMessage.setChatId(message.getChatId());
-        deleteTestMessage.setMessageId(ts.getTestsMessageId());
-        mp.deleteMsg(absSender, deleteTestMessage);
+        if (ts != null) {
+            //delete previous tests message
+            if (ts.getTestsMessageId() != 0) {
+                DeleteMessage deleteTestMessage = new DeleteMessage();
+                deleteTestMessage.setChatId(message.getChatId());
+                deleteTestMessage.setMessageId(ts.getTestsMessageId());
+                mp.deleteMsg(absSender, deleteTestMessage);
+            }
 
-        //delete previous question message
-        if (ts.getQuestionMessageId() != 0) {
-            DeleteMessage deleteQuestionMessage = new DeleteMessage();
-            deleteQuestionMessage.setChatId(message.getChatId());
-            deleteQuestionMessage.setMessageId(ts.getQuestionMessageId());
-            mp.deleteMsg(absSender, deleteQuestionMessage);
-        }
 
-        //delete previous article message if applicable
-        TestType testType = ts.getTest().get(0).getTestType();
-        if (testType == TestType.article || testType == TestType.articleWriting) {
-            DeleteMessage deleteMessage = new DeleteMessage();
-            deleteMessage.setChatId(message.getChatId());
-            deleteMessage.setMessageId(ts.getArticleMessageID());
-            mp.deleteMsg(absSender, deleteMessage);
+            //delete previous question message
+            if (ts.getQuestionMessageId() != 0) {
+                DeleteMessage deleteQuestionMessage = new DeleteMessage();
+                deleteQuestionMessage.setChatId(message.getChatId());
+                deleteQuestionMessage.setMessageId(ts.getQuestionMessageId());
+                mp.deleteMsg(absSender, deleteQuestionMessage);
+            }
+
+            //delete previous article message if applicable
+            if (ts.getTest() != null) {
+                TestType testType = ts.getTest().get(0).getTestType();
+                if (testType == TestType.article || testType == TestType.articleWriting) {
+                    DeleteMessage deleteMessage = new DeleteMessage();
+                    deleteMessage.setChatId(message.getChatId());
+                    deleteMessage.setMessageId(ts.getArticleMessageID());
+                    mp.deleteMsg(absSender, deleteMessage);
+                }
+            }
         }
 
         // initiate new test attempt
