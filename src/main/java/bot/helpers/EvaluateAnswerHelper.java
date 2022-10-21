@@ -1,11 +1,13 @@
 package bot.helpers;
 
 import bot.GrammarBot;
+import bot.ReplyConstants;
 import bot.SysConstants;
 import bot.enums.Option;
-import dto.ProcessingTestState;
+import bot.enums.TestType;
 import dto.TestQuestion;
 import dto.TestResult;
+import dto.TestState;
 import mapper.TestQuestionMapper;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -15,27 +17,40 @@ import java.util.Map;
 
 public class EvaluateAnswerHelper {
 
-    public boolean evaluateOptionAnswer(Update update, ProcessingTestState processingTestState) {
+    public boolean evaluateAnswer(TestType testType, Update update, TestState ts) {
+        boolean isRight = false;
+        if (testType == TestType.normal || testType == TestType.article)
+            isRight = evaluateOptionAnswer(update, ts);
+        else if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
+            String userMessage = "";
+            if (update.hasMessage())
+                userMessage = update.getMessage().getText().toLowerCase().strip();
+            isRight = evaluateWrittenAnswer(update, ts, userMessage);
+        }
+        return isRight;
+    }
+
+    private boolean evaluateOptionAnswer(Update update, TestState ts) {
         TestQuestionMapper testQuestionMapper = new TestQuestionMapper();
         String[] parsedCallbackForOptions = update.getCallbackQuery().getData().split(SysConstants.DELIMITER_FOR_QUESTIONS_CALLBACK);
         Option currentAnswer = testQuestionMapper.mapOption(parsedCallbackForOptions[SysConstants.NUMBER_OF_RESULTS_IN_CALLBACK]);
-        Option expectedAnswer = processingTestState.getTest().get(processingTestState.getCurrentQuestion() - 1).getAnswer();
+        Option expectedAnswer = ts.getTest().get(ts.getCurrentQuestion() - 1).getAnswer();
         boolean isRight = currentAnswer.equals(expectedAnswer);
 
         //save answer into the state
-        List<TestQuestion> test = processingTestState.getTest();
-        List<TestResult> results = processingTestState.getResults();
-        results.add(new TestResult(test.get(0).getTestType(), test.get(0).getArticle(), test.get(processingTestState.getCurrentQuestion() - 1).getQuestion(),
-                test.get(processingTestState.getCurrentQuestion() - 1).getOptions(), currentAnswer, "", isRight));
-        processingTestState.setResults(results);
-        GrammarBot.processingStateMap.put(update.getCallbackQuery().getFrom().getId(), processingTestState);
+        List<TestQuestion> test = ts.getTest();
+        List<TestResult> results = ts.getResults();
+        results.add(new TestResult(test.get(0).getTestType(), test.get(0).getArticle(), test.get(ts.getCurrentQuestion() - 1).getQuestion(),
+                test.get(ts.getCurrentQuestion() - 1).getOptions(), currentAnswer, "", isRight));
+        ts.setResults(results);
+        GrammarBot.stateMap.put(update.getCallbackQuery().getFrom().getId(), ts);
 
         return isRight;
     }
 
-    public boolean evaluateWrittenAnswer(Update update, ProcessingTestState processingTestState, String userMessage) {
+    private boolean evaluateWrittenAnswer(Update update, TestState ts, String userMessage) {
         boolean isRight = false;
-        String[] options = processingTestState.getTest().get(processingTestState.getCurrentQuestion() - 1)
+        String[] options = ts.getTest().get(ts.getCurrentQuestion() - 1)
                 .getAnswerWriting().split(SysConstants.DELIMITER_FOR_ALTERNATIVE_OPTIONS);
         //if there are more than one question in this question
         if (options.length > 1) { //1.test # test  2.test # test
@@ -58,7 +73,7 @@ public class EvaluateAnswerHelper {
             }
             //if in question only one question
         } else {
-            String[] optionsSplitted = processingTestState.getTest().get(processingTestState.getCurrentQuestion() - 1)
+            String[] optionsSplitted = ts.getTest().get(ts.getCurrentQuestion() - 1)
                     .getAnswerWriting().split(SysConstants.DELIMITER_FOR_WRITTEN_ANSWERS);
             isRight = false;
             for (String s : optionsSplitted) {
@@ -68,12 +83,12 @@ public class EvaluateAnswerHelper {
         }
 
         //save answer into the state
-        List<TestQuestion> test = processingTestState.getTest();
-        List<TestResult> results = processingTestState.getResults();
-        results.add(new TestResult(test.get(0).getTestType(), test.get(0).getArticle(), test.get(processingTestState.getCurrentQuestion() - 1).getQuestion(),
-                test.get(processingTestState.getCurrentQuestion() - 1).getOptions(), Option.A, userMessage, isRight));
-        processingTestState.setResults(results);
-        GrammarBot.processingStateMap.put(update.getMessage().getFrom().getId(), processingTestState);
+        List<TestQuestion> test = ts.getTest();
+        List<TestResult> results = ts.getResults();
+        results.add(new TestResult(test.get(0).getTestType(), test.get(0).getArticle(), test.get(ts.getCurrentQuestion() - 1).getQuestion(),
+                test.get(ts.getCurrentQuestion() - 1).getOptions(), Option.A, userMessage, isRight));
+        ts.setResults(results);
+        GrammarBot.stateMap.put(update.getMessage().getFrom().getId(), ts);
 
         return isRight;
     }

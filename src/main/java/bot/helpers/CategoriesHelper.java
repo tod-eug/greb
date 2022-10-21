@@ -1,19 +1,53 @@
 package bot.helpers;
 
 import bot.ReplyConstants;
+import bot.keyboards.CategoriesKeyboard;
 import bot.keyboards.TestsKeyboard;
-import dto.ChoosingTestState;
 import dto.Test;
+import org.telegram.telegrambots.meta.api.methods.ParseMode;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
-import org.telegram.telegrambots.meta.api.objects.Update;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class CategoriesHelper {
 
-    public SendMessage getSendTestsListMessage(String category, Update update, ChoosingTestState choosingTestState) {
+    public SendMessage getInitialTestingProcessMessage(Long userId, Long chatId, Map<String, List<Test>> categories, String categoryChooseTimestamp) {
+        String categoriesList = "";
+        Set<String> set = categories.keySet();
+        if (!set.isEmpty()) {
+            for (String s : set) {
+                categoriesList = categoriesList + s + "\n";
+            }
+        }
 
-        List<Test> tests = choosingTestState.getCategories().get(category);
+        SendMessage sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setText(ReplyConstants.TESTS_COMMAND + categoriesList);
+        sendMessage.setReplyMarkup(CategoriesKeyboard.getCategoriesKeyboard(set, userId, categoryChooseTimestamp));
+        return sendMessage;
+    }
+
+    public EditMessageText getInitialTestingProcessMessageEdit(Long userId, Long chatId, Map<String, List<Test>> categories, String categoryChooseTimestamp, int messageId) {
+        String categoriesList = "";
+        Set<String> set = categories.keySet();
+        if (!set.isEmpty()) {
+            for (String s : set) {
+                categoriesList = categoriesList + s + "\n";
+            }
+        }
+
+        EditMessageText editMessage = new EditMessageText();
+        editMessage.setMessageId(messageId);
+        editMessage.setChatId(chatId);
+        editMessage.setText(ReplyConstants.TESTS_COMMAND + categoriesList);
+        editMessage.setReplyMarkup(CategoriesKeyboard.getCategoriesKeyboard(set, userId, categoryChooseTimestamp));
+        return editMessage;
+    }
+
+    public EditMessageText getSendTestsListMessage(Long chatId, Long userId, int messageId, String category, List<Test> tests, String testChooseTimestamp) {
 
         String testsList = "";
         if (!tests.isEmpty()) {
@@ -22,10 +56,12 @@ public class CategoriesHelper {
             }
         }
 
-        SendMessage sm = new SendMessage();
-        sm.setChatId(update.getCallbackQuery().getMessage().getChatId());
-        sm.setText(ReplyConstants.LIST_OF_TESTS_IN_CATEGORY + testsList);
-        sm.setReplyMarkup(TestsKeyboard.getTestsKeyboard(tests, update.getCallbackQuery().getMessage().getFrom()));
-        return sm;
+        EditMessageText em = new EditMessageText();
+        em.setMessageId(messageId);
+        em.setChatId(chatId);
+        em.setText(ReplyConstants.LIST_OF_TESTS_IN_CATEGORY_1 + category + ReplyConstants.LIST_OF_TESTS_IN_CATEGORY_2 + testsList);
+        em.setParseMode(ParseMode.HTML);
+        em.setReplyMarkup(TestsKeyboard.getTestsKeyboard(tests, userId, testChooseTimestamp));
+        return em;
     }
 }

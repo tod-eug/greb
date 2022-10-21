@@ -4,6 +4,7 @@ public interface SysConstants {
     String CATEGORIES_CALLBACK_TYPE = "categories";
     String TESTS_CALLBACK_TYPE = "test";
     String QUESTIONS_CALLBACK_TYPE = "question";
+    String GO_BACK = "back";
     String DELIMITER_FOR_CATEGORIES_CALLBACK = ";";
     String DELIMITER_FOR_TESTS_CALLBACK = "-";
     String DELIMITER_FOR_QUESTIONS_CALLBACK = ":";
