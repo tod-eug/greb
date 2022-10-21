@@ -2,7 +2,6 @@ package bot;
 
 import bot.command.CancelCommand;
 import bot.command.StartCommand;
-import bot.command.TestsCommand;
 import bot.enums.TestType;
 import bot.helpers.CategoriesHelper;
 import bot.helpers.EvaluateAnswerHelper;
@@ -203,16 +202,7 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
             if (update.hasCallbackQuery())
                 sendAnswerCallbackQuery(callbackQueryID);
 
-            //delete previous question
-            deleteMessage(chatID, currentMessageId);
-            if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
-                List<Integer> messagesToDelete = ts.getMessagesToDelete();
-                for (Integer i : messagesToDelete) {
-                    deleteMessage(chatID, i);
-                }
-                List<Integer> newMessagesToDelete = new ArrayList<>();
-                ts.setMessagesToDelete(newMessagesToDelete);
-            }
+            //save current result into db
             rh.createResult(ts, currentAnswer, isRight);
         }
 
@@ -231,31 +221,42 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
         }
 
         if (currentQuestion < test.size()) { //if its not last question send next one
-            SendMessage sm = new SendMessage();
-            sm.setChatId(chatID);
-            sm.setText(test.get(ts.getCurrentQuestion()).getQuestion());
-            sm.setParseMode(ParseMode.HTML);
-            sm.setReplyMarkup(OptionsKeyboard.getOptionKeyboard(ts.getTest().get(ts.getCurrentQuestion()).getOptions(), ts.getAttemptCode(), ts.getCurrentQuestion()));
-            if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
-                //send message and store message id to delete it after answer
+            if (ts.getQuestionMessageId() == 0) { //if its first message then send it and store message id
+                SendMessage sm = new SendMessage();
+                sm.setChatId(chatID);
+                sm.setText(test.get(ts.getCurrentQuestion()).getQuestion());
+                sm.setParseMode(ParseMode.HTML);
+                sm.setReplyMarkup(OptionsKeyboard.getOptionKeyboard(ts.getTest().get(ts.getCurrentQuestion()).getOptions(), ts.getAttemptCode(), ts.getCurrentQuestion()));
+
                 int messageId = sendAndReturnMessageID(sm);
-                List<Integer> messagesToDelete = ts.getMessagesToDelete();
-                messagesToDelete.add(messageId);
-                ts.setMessagesToDelete(messagesToDelete);
-            } else
-                ts.setQuestionMessageId(sendAndReturnMessageID(sm));
+                ts.setQuestionMessageId(messageId);
+            } else { //otherwise edit existing one
+                EditMessageText em = new EditMessageText();
+                em.setChatId(chatID);
+                em.setMessageId(ts.getQuestionMessageId());
+                em.setText(test.get(ts.getCurrentQuestion()).getQuestion());
+                em.setParseMode(ParseMode.HTML);
+                em.setReplyMarkup(OptionsKeyboard.getOptionKeyboard(ts.getTest().get(ts.getCurrentQuestion()).getOptions(), ts.getAttemptCode(), ts.getCurrentQuestion()));
+                editMessage(em);
+            }
             InfoMessageHelper imh = new InfoMessageHelper();
             editMessage(chatID, ts.getTestsMessageId(), imh.getMessage(ts), true);
         } else { //processing test result
             if (testType == TestType.article || testType == TestType.articleWriting) { //if article -> delete message with article
                 deleteMessage(chatID, ts.getArticleMessageID());
             }
+            //delete question message
+            deleteMessage(chatID, ts.getQuestionMessageId());
             InfoMessageHelper imh = new InfoMessageHelper();
             editMessage(chatID, ts.getTestsMessageId(), imh.getMessage(ts), true);
 
             //reset processing state
             stateMap.remove(userId);
             initiateTestingProcess(userId, chatID);
+        }
+        if (testType == TestType.normalWriting || testType == TestType.articleWriting) {
+            if (update.hasMessage())
+                deleteMessage(chatID, update.getMessage().getMessageId());
         }
         ts.setCurrentQuestion(++currentQuestion);
     }
@@ -282,9 +283,8 @@ public class GrammarBot extends TelegramLongPollingCommandBot {
                 test = t;
         }
         //put user into current attempt of chosen test
-        List<Integer> optionMessages = new ArrayList<>();
         List<TestResult> testResults = new ArrayList<>();
-        ts.setTestInformation(testCode, test, attemptCode, 0, optionMessages, 0, testResults);
+        ts.setTestInformation(testCode, test, attemptCode, 0, 0, testResults);
         stateMap.put(userId, ts);
 
         //save attempt into db
